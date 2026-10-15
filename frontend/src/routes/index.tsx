@@ -49,10 +49,6 @@ const defaultFilters: CallLogFilters = {
   dateTo: "",
 };
 
-const API_BASE_URL = (
-  import.meta.env.VITE_API_BASE_URL || "http://localhost:8000"
-).replace(/\/$/, "");
-
 const columns: GridColDef<CallLog>[] = [
   { field: "date", headerName: "Date", flex: 1, minWidth: 125 },
   { field: "time", headerName: "Time", flex: 0.8, minWidth: 105 },
@@ -128,7 +124,7 @@ function RouteComponent() {
   >({
     queryKey: ["call_logs"] as const,
     queryFn: async ({ signal }) => {
-      const response = await fetch(`${API_BASE_URL}/api/calls/list`, {
+      const response = await fetch("/api/calls/list", {
         signal,
       });
       if (!response.ok) {
