@@ -1,9 +1,13 @@
 from fastapi import FastAPI
 from fastapi.responses import Response, JSONResponse
-from fastapi import File, HTTPException, UploadFile
+from fastapi import File, HTTPException, UploadFile, Depends
 import pandas as pd
 from io import BytesIO
 from typing import List, Dict
+from typing import Annotated
+from sqlalchemy.engine import Connection
+from sqlalchemy import text
+from database.local_db_client import get_local_db_connection
 
 app = FastAPI()
 
@@ -55,5 +59,11 @@ async def upload_call_log(file: UploadFile = File(...)):
     }
 
 @app.get("/health")
-def health_check():
+def health_check(db: Annotated[Connection, Depends(get_local_db_connection)]):
+    if not db:
+        raise HTTPException(status_code=503, detail="Database unavailable")
+    try:
+        db.execute(text("SELECT 1")).scalar_one()
+    except Exception:
+        raise HTTPException(status_code=503, detail="Database unavailable")
     return JSONResponse(content={"status":"healthy"})
