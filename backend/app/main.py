@@ -1,17 +1,17 @@
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
-
+from fastapi import Depends, FastAPI, File, HTTPException, UploadFile
 from fastapi import FastAPI
 from fastapi.responses import Response, JSONResponse
 from fastapi import File, HTTPException, UploadFile, Depends
 import pandas as pd
 from io import BytesIO
 from typing import Annotated
-from sqlalchemy import insert, text
+from sqlalchemy import insert, text, select
 from sqlalchemy.orm import Session, sessionmaker
 from starlette.concurrency import run_in_threadpool
 from pydantic import TypeAdapter, ValidationError
-from app.models.call_record import CallRecordCreate
+from app.models.call_record import CallRecordCreate, CallRecordRead
 from database.local_db_client import (
     create_local_db_engine,
     get_local_db_session,
@@ -101,6 +101,14 @@ def upload_call_log(
         "filename": file.filename,
         "count": len(validated_records),
     }
+
+@app.get("/api/calls/list")
+def list_call_logs(
+    db: Annotated[Session, Depends(get_local_db_session, scope="function")],
+):
+    result = db.execute(select(CallRecord.date, CallRecord.time, CallRecord.country_code, CallRecord.caller_number)).mappings().all()
+    call_logs = [dict(row) for row in result]
+    return {"call_logs": call_logs}
 
 @app.get("/health")
 def health_check(
