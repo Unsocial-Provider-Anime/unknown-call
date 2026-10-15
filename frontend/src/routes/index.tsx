@@ -15,23 +15,30 @@ import { useTheme } from "@mui/material/styles";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { DataGrid, type GridColDef } from "@mui/x-data-grid";
 import { useRef, useState } from "react";
+import { z } from "zod";
 
-type CallLog = {
-  id: number;
-  date: string;
-  time: string;
-  country_code: string;
-  caller_number: string;
-};
+const callLogSchema = z.object({
+  id: z.number(),
+  date: z.string(),
+  time: z.string(),
+  country_code: z.string(),
+  caller_number: z.string(),
+});
 
-type CallLogsResponse = {
-  call_logs: CallLog[];
-};
+type CallLog = z.infer<typeof callLogSchema>;
 
-type UploadResponse = {
-  filename: string;
-  count: number;
-};
+const callLogsResponseSchema = z.object({
+  call_logs: z.array(callLogSchema),
+});
+
+type CallLogsResponse = z.infer<typeof callLogsResponseSchema>;
+
+const uploadResponseSchema = z.object({
+  filename: z.string(),
+  count: z.number(),
+});
+
+type UploadResponse = z.infer<typeof uploadResponseSchema>;
 
 const API_BASE_URL = (
   import.meta.env.VITE_API_BASE_URL || "http://localhost:8000"
@@ -116,7 +123,7 @@ function RouteComponent() {
       if (!response.ok) {
         throw new Error(await responseError(response));
       }
-      return (await response.json()) as CallLogsResponse;
+      return callLogsResponseSchema.parse(await response.json());
     },
   });
 
@@ -131,7 +138,7 @@ function RouteComponent() {
       if (!response.ok) {
         throw new Error(await responseError(response));
       }
-      return (await response.json()) as UploadResponse;
+      return uploadResponseSchema.parse(await response.json());
     },
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ["call_logs"] });
