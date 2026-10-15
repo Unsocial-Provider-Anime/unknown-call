@@ -114,7 +114,15 @@ def upload_call_log(
 def list_call_logs(
     db: Annotated[Session, Depends(get_local_db_session, scope="function")],
 ):
-    result = db.execute(select(CallRecord.date, CallRecord.time, CallRecord.country_code, CallRecord.caller_number)).mappings().all()
+    result = db.execute(
+        select(
+            CallRecord.id,
+            CallRecord.date,
+            CallRecord.time,
+            CallRecord.country_code,
+            CallRecord.caller_number,
+        ).order_by(CallRecord.id)
+    ).mappings().all()
     call_logs = [dict(row) for row in result]
     return {"call_logs": call_logs}
 

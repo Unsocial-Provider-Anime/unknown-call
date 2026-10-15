@@ -1,9 +1,7 @@
-import { createTheme, responsiveFontSizes } from "@mui/material/styles";
+import { createTheme } from "@mui/material/styles";
 
-const baseTheme = createTheme({
+export const theme = createTheme({
   cssVariables: {
     colorSchemeSelector: "class",
   },
 });
-
-export const theme = responsiveFontSizes(baseTheme);

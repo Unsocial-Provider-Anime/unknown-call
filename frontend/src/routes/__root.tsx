@@ -21,8 +21,8 @@ function RootComponent() {
       <InitColorSchemeScript />
       <CssBaseline />
       <Outlet />
-      <TanStackRouterDevtools />
-      <ReactQueryDevtools />
+      {import.meta.env.DEV && <TanStackRouterDevtools />}
+      {import.meta.env.DEV && <ReactQueryDevtools />}
     </ThemeProvider>
   );
 }
