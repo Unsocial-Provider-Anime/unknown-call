@@ -213,14 +213,8 @@ function RouteComponent() {
             }}
           >
             <Box sx={{ display: "flex", flexDirection: "column", gap: 0.75 }}>
-              <Typography variant="overline" color="primary.main">
-                Unknown Call / Operations
-              </Typography>
               <Typography variant="h4" component="h1">
-                Call logs
-              </Typography>
-              <Typography color="text.secondary">
-                Review and filter imported caller records.
+                Unknown Call
               </Typography>
             </Box>
             <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1.25 }}>
