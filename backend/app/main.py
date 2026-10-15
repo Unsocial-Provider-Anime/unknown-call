@@ -3,7 +3,6 @@ from contextlib import asynccontextmanager
 from fastapi import Depends, FastAPI, File, HTTPException, UploadFile
 from fastapi import FastAPI
 from fastapi.responses import Response, JSONResponse
-from fastapi.middleware.cors import CORSMiddleware
 from fastapi import File, HTTPException, UploadFile, Depends
 import pandas as pd
 from io import BytesIO
@@ -12,7 +11,7 @@ from sqlalchemy import insert, text, select
 from sqlalchemy.orm import Session, sessionmaker
 from starlette.concurrency import run_in_threadpool
 from pydantic import TypeAdapter, ValidationError
-from app.models.call_record import CallRecordCreate, CallRecordRead
+from app.models.call_record import CallRecordCreate
 from database.local_db_client import (
     create_local_db_engine,
     get_local_db_session,
@@ -27,36 +26,28 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None]:
     try:
         await run_in_threadpool(probe_database, engine)
         app.state.engine = engine
-        app.state.session_factory = sessionmaker(
-            bind=engine, expire_on_commit=False
-        )
+        app.state.session_factory = sessionmaker(bind=engine, expire_on_commit=False)
         yield
     finally:
         await run_in_threadpool(engine.dispose)
 
 
 app = FastAPI(lifespan=lifespan)
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+
 
 @app.get("/")
 def read_root():
-    return JSONResponse(content={"message":"Backend"})
+    return JSONResponse(content={"message": "Backend"})
+
 
 @app.get("/api/template")
 def download_csv_template():
     return Response(
         content="date,time,country_code,caller_number\r\n",
         media_type="text/csv",
-        headers={
-            "Content-Disposition": 'attachment; filename="call_log_template.csv"'
-        },
+        headers={"Content-Disposition": 'attachment; filename="call_log_template.csv"'},
     )
+
 
 @app.post("/api/calls/upload")
 def upload_call_log(
@@ -110,25 +101,31 @@ def upload_call_log(
         "count": len(validated_records),
     }
 
+
 @app.get("/api/calls/list")
 def list_call_logs(
     db: Annotated[Session, Depends(get_local_db_session, scope="function")],
 ):
-    result = db.execute(
-        select(
-            CallRecord.id,
-            CallRecord.date,
-            CallRecord.time,
-            CallRecord.country_code,
-            CallRecord.caller_number,
-        ).order_by(CallRecord.id)
-    ).mappings().all()
+    result = (
+        db.execute(
+            select(
+                CallRecord.id,
+                CallRecord.date,
+                CallRecord.time,
+                CallRecord.country_code,
+                CallRecord.caller_number,
+            ).order_by(CallRecord.id)
+        )
+        .mappings()
+        .all()
+    )
     call_logs = [dict(row) for row in result]
     return {"call_logs": call_logs}
+
 
 @app.get("/health")
 def health_check(
     db: Annotated[Session, Depends(get_local_db_session, scope="function")],
 ):
     db.execute(text("SELECT 1")).scalar_one()
-    return JSONResponse(content={"status":"healthy"})
+    return JSONResponse(content={"status": "healthy"})
