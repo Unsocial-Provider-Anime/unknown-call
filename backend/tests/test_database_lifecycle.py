@@ -111,6 +111,47 @@ def test_exceptional_lifespan_exit_disposes_engine(database: DatabaseMocks) -> N
     engine.dispose.assert_called_once()
 
 
+def test_list_call_logs_returns_stable_ids(database: DatabaseMocks) -> None:
+    engine, factory, sessions, constructor = database
+    session = MagicMock(spec=Session)
+    session.__enter__.return_value = session
+    factory.side_effect = None
+    factory.return_value = session
+    session.execute.return_value.mappings.return_value.all.return_value = [
+        {
+            "id": 42,
+            "date": date(2026, 10, 15),
+            "time": time(12, 30),
+            "country_code": "+852",
+            "caller_number": "12345678",
+        }
+    ]
+
+    with TestClient(main.app) as client:
+        response = client.get("/api/calls/list")
+
+    assert response.status_code == 200
+    assert response.json() == {
+        "call_logs": [
+            {
+                "id": 42,
+                "date": "2026-10-15",
+                "time": "12:30:00",
+                "country_code": "+852",
+                "caller_number": "12345678",
+            }
+        ]
+    }
+    statement = session.execute.call_args.args[0]
+    assert statement.selected_columns.keys() == [
+        "id",
+        "date",
+        "time",
+        "country_code",
+        "caller_number",
+    ]
+
+
 def test_upload_uses_bulk_insert_and_transaction(database: DatabaseMocks) -> None:
     engine, factory, sessions, constructor = database
     with TestClient(main.app) as client:
