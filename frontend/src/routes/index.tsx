@@ -14,6 +14,8 @@ import useMediaQuery from "@mui/material/useMediaQuery";
 import { useTheme } from "@mui/material/styles";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { DataGrid, type GridColDef } from "@mui/x-data-grid";
+import { DatePicker } from "@mui/x-date-pickers/DatePicker";
+import dayjs from "dayjs";
 import { useRef } from "react";
 import { Controller, useForm, useWatch } from "react-hook-form";
 import { z } from "zod";
@@ -337,21 +339,39 @@ function RouteComponent() {
                   )}
                 />
               </FormControl>
-              <TextField
-                label="From"
-                type="date"
-                {...register("dateFrom")}
-                size="small"
-                slotProps={{ inputLabel: { shrink: true } }}
-                sx={{ minWidth: { xs: "100%", md: 155 } }}
+              <Controller
+                name="dateFrom"
+                control={control}
+                render={({ field }) => (
+                  <DatePicker
+                    label="From"
+                    value={field.value ? dayjs(field.value) : null}
+                    onChange={(value) => {
+                      field.onChange(
+                        value?.isValid() ? value.format("YYYY-MM-DD") : "",
+                      );
+                    }}
+                    slotProps={{ textField: { size: "small" } }}
+                    sx={{ minWidth: { xs: "100%", md: 155 } }}
+                  />
+                )}
               />
-              <TextField
-                label="To"
-                type="date"
-                {...register("dateTo")}
-                size="small"
-                slotProps={{ inputLabel: { shrink: true } }}
-                sx={{ minWidth: { xs: "100%", md: 155 } }}
+              <Controller
+                name="dateTo"
+                control={control}
+                render={({ field }) => (
+                  <DatePicker
+                    label="To"
+                    value={field.value ? dayjs(field.value) : null}
+                    onChange={(value) => {
+                      field.onChange(
+                        value?.isValid() ? value.format("YYYY-MM-DD") : "",
+                      );
+                    }}
+                    slotProps={{ textField: { size: "small" } }}
+                    sx={{ minWidth: { xs: "100%", md: 155 } }}
+                  />
+                )}
               />
               <Button
                 variant="text"
