@@ -1,21 +1,16 @@
-from datetime import date as Date, time as Time
-from pydantic import BaseModel, Field
-from datetime import datetime
+from datetime import date as Date, datetime as DateTime, time as Time
 
-class CallRecordDB(BaseModel):
-    id: int = Field(..., description="The unique identifier of the call record")
-    date: Date = Field(..., description="The date of the call")
-    time: Time = Field(..., description="The time of the call")
-    country_code: str = Field(..., description="The country code of the caller")
-    caller_number: str = Field(..., description="The caller's phone number")
-    created_at: datetime = Field(..., description="The timestamp when the record was created")
+from pydantic import BaseModel, ConfigDict, Field
 
 class CallRecordCreate(BaseModel):
-    date: Date = Field(..., description="The date of the call")
-    time: Time = Field(..., description="The time of the call")
-    country_code: str = Field(..., description="The country code of the caller")
-    caller_number: str = Field(..., description="The caller's phone number")
+    date: Date
+    time: Time
+    country_code: str = Field(min_length=1)
+    caller_number: str = Field(min_length=1)
+
 
 class CallRecordRead(CallRecordCreate):
-    id: int = Field(..., description="The unique identifier of the call record")
-    created_at: datetime = Field(..., description="The timestamp when the record was created")
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    created_at: DateTime
