@@ -3,5 +3,6 @@ CREATE TABLE call_records (
     date DATE NOT NULL,
     time TIME WITHOUT TIME ZONE NOT NULL,
     country_code TEXT NOT NULL,
-    caller_number TEXT NOT NULL
+    caller_number TEXT NOT NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
 );
