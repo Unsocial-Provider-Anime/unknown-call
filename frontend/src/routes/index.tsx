@@ -266,8 +266,7 @@ function RouteComponent() {
               }}
             >
               Imported {uploadMutation.data.count} call
-              {uploadMutation.data.count === 1 ? "" : "s"} from{" "}
-              {uploadMutation.data.filename}.
+              {uploadMutation.data.count === 1 ? "" : "s"}
             </Alert>
           )}
           {uploadMutation.isError && (
