@@ -12,11 +12,10 @@ import Typography from "@mui/material/Typography";
 import Alert from "@mui/material/Alert";
 import useMediaQuery from "@mui/material/useMediaQuery";
 import { useTheme } from "@mui/material/styles";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { DataGrid, type GridColDef } from "@mui/x-data-grid";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import dayjs from "dayjs";
-import { useRef } from "react";
 import { Controller, useForm, useWatch } from "react-hook-form";
 import { z } from "zod";
 
@@ -35,13 +34,6 @@ const callLogsResponseSchema = z.object({
 });
 
 type CallLogsResponse = z.infer<typeof callLogsResponseSchema>;
-
-const uploadResponseSchema = z.object({
-  filename: z.string(),
-  count: z.number(),
-});
-
-type UploadResponse = z.infer<typeof uploadResponseSchema>;
 
 type CallLogFilters = {
   search: string;
@@ -119,10 +111,8 @@ export const Route = createFileRoute("/")({
 });
 
 function RouteComponent() {
-  const queryClient = useQueryClient();
   const theme = useTheme();
   const isCompact = useMediaQuery(theme.breakpoints.down("sm"));
-  const fileInputRef = useRef<HTMLInputElement>(null);
   const { control, register, reset } = useForm<CallLogFilters>({
     defaultValues: defaultFilters,
   });
@@ -145,24 +135,6 @@ function RouteComponent() {
         throw new Error(await responseError(response));
       }
       return callLogsResponseSchema.parse(await response.json());
-    },
-  });
-
-  const uploadMutation = useMutation<UploadResponse, Error, File>({
-    mutationFn: async (file) => {
-      const formData = new FormData();
-      formData.append("file", file);
-      const response = await fetch(`${API_BASE_URL}/api/calls/upload`, {
-        method: "POST",
-        body: formData,
-      });
-      if (!response.ok) {
-        throw new Error(await responseError(response));
-      }
-      return uploadResponseSchema.parse(await response.json());
-    },
-    onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ["call_logs"] });
     },
   });
 
@@ -217,68 +189,7 @@ function RouteComponent() {
                 Unknown Call
               </Typography>
             </Box>
-            <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1.25 }}>
-              <Button
-                component="a"
-                href={`${API_BASE_URL}/api/template`}
-                variant="outlined"
-                color="inherit"
-              >
-                Download CSV template
-              </Button>
-              <Button
-                variant="contained"
-                onClick={() => {
-                  fileInputRef.current?.click();
-                }}
-                disabled={uploadMutation.isPending}
-              >
-                {uploadMutation.isPending ? "Importing CSV..." : "Import CSV"}
-              </Button>
-              <Box
-                component="input"
-                ref={fileInputRef}
-                type="file"
-                accept=".csv,text/csv"
-                aria-label="Choose a call log CSV file"
-                sx={{ display: "none" }}
-                onChange={(event) => {
-                  const file = event.target.files?.[0];
-                  if (file) {
-                    uploadMutation.mutate(file);
-                  }
-                  event.target.value = "";
-                }}
-              />
-            </Box>
           </Box>
-
-          {uploadMutation.isPending && (
-            <Alert severity="info">
-              Uploading and validating your CSV file...
-            </Alert>
-          )}
-          {uploadMutation.isSuccess && (
-            <Alert
-              severity="success"
-              onClose={() => {
-                uploadMutation.reset();
-              }}
-            >
-              Imported {uploadMutation.data.count} call
-              {uploadMutation.data.count === 1 ? "" : "s"}
-            </Alert>
-          )}
-          {uploadMutation.isError && (
-            <Alert
-              severity="error"
-              onClose={() => {
-                uploadMutation.reset();
-              }}
-            >
-              CSV import failed: {uploadMutation.error.message}
-            </Alert>
-          )}
 
           <Box
             component="form"
@@ -442,28 +353,8 @@ function RouteComponent() {
                 No call records yet
               </Typography>
               <Typography color="text.secondary">
-                Import a CSV file to add call records. Use the template to check
-                the required columns.
+                There are no call records to display.
               </Typography>
-              <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1.25 }}>
-                <Button
-                  variant="contained"
-                  onClick={() => {
-                    fileInputRef.current?.click();
-                  }}
-                  disabled={uploadMutation.isPending}
-                >
-                  Import CSV
-                </Button>
-                <Button
-                  component="a"
-                  href={`${API_BASE_URL}/api/template`}
-                  variant="outlined"
-                  color="inherit"
-                >
-                  Download CSV template
-                </Button>
-              </Box>
             </Box>
           ) : filteredLogs.length === 0 ? (
             <Box
@@ -488,7 +379,6 @@ function RouteComponent() {
               <DataGrid
                 rows={filteredLogs}
                 columns={columns}
-                loading={uploadMutation.isPending}
                 columnVisibilityModel={isCompact ? { time: false } : undefined}
                 disableRowSelectionOnClick
                 pageSizeOptions={[10, 25, 50]}
