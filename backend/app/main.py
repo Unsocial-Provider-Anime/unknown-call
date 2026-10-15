@@ -7,6 +7,8 @@ from typing import List, Dict
 from typing import Annotated
 from sqlalchemy.engine import Connection
 from sqlalchemy import text
+from pydantic import TypeAdapter, ValidationError
+from app.models.call_record import CallRecordCreate
 from database.local_db_client import get_local_db_connection
 
 app = FastAPI()
@@ -26,11 +28,14 @@ def download_csv_template():
     )
 
 @app.post("/api/calls/upload")
-async def upload_call_log(file: UploadFile = File(...)):
+def upload_call_log(
+    db: Annotated[Connection, Depends(get_local_db_connection)],
+    file: UploadFile = File(...),
+):
     if not file.filename or not file.filename.lower().endswith(".csv"):
         raise HTTPException(status_code=400, detail="Please upload a .csv file.")
 
-    content = await file.read()
+    content = file.file.read()
 
     try:
         records = pd.read_csv(
@@ -52,10 +57,32 @@ async def upload_call_log(file: UploadFile = File(...)):
             detail={"missing_columns": missing_columns},
         )
 
+    try:
+        validated_records = TypeAdapter(list[CallRecordCreate]).validate_python(
+            records[required_columns].to_dict(orient="records")
+        )
+    except ValidationError as exc:
+        raise HTTPException(
+            status_code=422,
+            detail=exc.errors(include_context=False, include_url=False),
+        ) from None
+
+    if validated_records:
+        with db.begin():
+            db.execute(
+                text("""
+                    INSERT INTO call_records (
+                        date, time, country_code, caller_number
+                    )
+                    VALUES (:date, :time, :country_code, :caller_number)
+                """),
+                [record.model_dump() for record in validated_records],
+            )
+
     return {
         "filename": file.filename,
-        "count": len(records),
-        "records": records[required_columns].to_dict(orient="records"),
+        "count": len(validated_records),
+        "records": [record.model_dump(mode="json") for record in validated_records],
     }
 
 @app.get("/health")
