@@ -100,7 +100,6 @@ def upload_call_log(
     return {
         "filename": file.filename,
         "count": len(validated_records),
-        "records": [record.model_dump(mode="json") for record in validated_records],
     }
 
 @app.get("/health")
