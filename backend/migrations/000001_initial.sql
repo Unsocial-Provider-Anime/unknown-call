@@ -1,0 +1,7 @@
+CREATE TABLE call_records (
+    id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    date DATE NOT NULL,
+    time TIME WITHOUT TIME ZONE NOT NULL,
+    country_code TEXT NOT NULL,
+    caller_number TEXT NOT NULL
+);
