@@ -18,21 +18,25 @@ from database.local_db_client import (
     probe_database,
 )
 from database.tables import CallRecord
-
+from supabase import Client
+from database.supabase_client import get_supabase
 
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncGenerator[None]:
-    engine = await run_in_threadpool(create_local_db_engine)
-    try:
-        await run_in_threadpool(probe_database, engine)
-        app.state.engine = engine
-        app.state.session_factory = sessionmaker(bind=engine, expire_on_commit=False)
-        yield
-    finally:
-        await run_in_threadpool(engine.dispose)
+    pass
+    # engine = await run_in_threadpool(create_local_db_engine)
+    # try:
+    #     await run_in_threadpool(probe_database, engine)
+    #     app.state.engine = engine
+    #     app.state.session_factory = sessionmaker(bind=engine, expire_on_commit=False)
+    #     yield
+    # finally:
+    #     await run_in_threadpool(engine.dispose)
 
 
-app = FastAPI(lifespan=lifespan)
+# app = FastAPI(lifespan=lifespan)
+
+app = FastAPI()
 
 
 @app.get("/")
@@ -103,7 +107,16 @@ def upload_call_log(
 
 
 @app.get("/api/calls/list")
-def list_call_logs(
+def list_call_logs(supabase: Client = Depends(get_supabase)):
+    try:
+        response = supabase.table("call_records").select("id,date,time,country_code,caller_number").execute()
+        return {"call_logs": response.data}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error fetching call logs: {e}")
+
+
+@app.get("/api/calls/list/local")
+def local_list_call_logs(
     db: Annotated[Session, Depends(get_local_db_session, scope="function")],
 ):
     result = (
