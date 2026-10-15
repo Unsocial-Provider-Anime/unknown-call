@@ -14,7 +14,8 @@ import useMediaQuery from "@mui/material/useMediaQuery";
 import { useTheme } from "@mui/material/styles";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { DataGrid, type GridColDef } from "@mui/x-data-grid";
-import { useRef, useState } from "react";
+import { useRef } from "react";
+import { Controller, useForm, useWatch } from "react-hook-form";
 import { z } from "zod";
 
 const callLogSchema = z.object({
@@ -39,6 +40,20 @@ const uploadResponseSchema = z.object({
 });
 
 type UploadResponse = z.infer<typeof uploadResponseSchema>;
+
+type CallLogFilters = {
+  search: string;
+  countryCode: string;
+  dateFrom: string;
+  dateTo: string;
+};
+
+const defaultFilters: CallLogFilters = {
+  search: "",
+  countryCode: "all",
+  dateFrom: "",
+  dateTo: "",
+};
 
 const API_BASE_URL = (
   import.meta.env.VITE_API_BASE_URL || "http://localhost:8000"
@@ -106,10 +121,14 @@ function RouteComponent() {
   const theme = useTheme();
   const isCompact = useMediaQuery(theme.breakpoints.down("sm"));
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [search, setSearch] = useState("");
-  const [countryCode, setCountryCode] = useState("all");
-  const [dateFrom, setDateFrom] = useState("");
-  const [dateTo, setDateTo] = useState("");
+  const { control, register, reset } = useForm<CallLogFilters>({
+    defaultValues: defaultFilters,
+  });
+  const filters = useWatch({ control });
+  const search = filters?.search ?? defaultFilters.search;
+  const countryCode = filters?.countryCode ?? defaultFilters.countryCode;
+  const dateFrom = filters?.dateFrom ?? defaultFilters.dateFrom;
+  const dateTo = filters?.dateTo ?? defaultFilters.dateTo;
 
   const { data, isLoading, isError, error, refetch } = useQuery<
     CallLogsResponse,
@@ -165,10 +184,7 @@ function RouteComponent() {
   );
 
   function clearFilters() {
-    setSearch("");
-    setCountryCode("all");
-    setDateFrom("");
-    setDateTo("");
+    reset(defaultFilters);
   }
 
   return (
@@ -270,8 +286,11 @@ function RouteComponent() {
           )}
 
           <Box
-            component="section"
+            component="form"
             aria-label="Call log filters"
+            onSubmit={(event) => {
+              event.preventDefault();
+            }}
             sx={{
               py: 2,
               borderTop: 1,
@@ -290,10 +309,7 @@ function RouteComponent() {
               <TextField
                 label="Search calls"
                 placeholder="Number, country code, date..."
-                value={search}
-                onChange={(event) => {
-                  setSearch(event.target.value);
-                }}
+                {...register("search")}
                 size="small"
                 sx={{ flex: 1, minWidth: { md: 220 } }}
               />
@@ -302,29 +318,29 @@ function RouteComponent() {
                 sx={{ minWidth: { xs: "100%", md: 165 } }}
               >
                 <InputLabel id="country-filter-label">Country code</InputLabel>
-                <Select
-                  labelId="country-filter-label"
-                  label="Country code"
-                  value={countryCode}
-                  onChange={(event) => {
-                    setCountryCode(event.target.value);
-                  }}
-                >
-                  <MenuItem value="all">All country codes</MenuItem>
-                  {countryCodes.map((code) => (
-                    <MenuItem key={code} value={code}>
-                      {code}
-                    </MenuItem>
-                  ))}
-                </Select>
+                <Controller
+                  name="countryCode"
+                  control={control}
+                  render={({ field }) => (
+                    <Select
+                      {...field}
+                      labelId="country-filter-label"
+                      label="Country code"
+                    >
+                      <MenuItem value="all">All country codes</MenuItem>
+                      {countryCodes.map((code) => (
+                        <MenuItem key={code} value={code}>
+                          {code}
+                        </MenuItem>
+                      ))}
+                    </Select>
+                  )}
+                />
               </FormControl>
               <TextField
                 label="From"
                 type="date"
-                value={dateFrom}
-                onChange={(event) => {
-                  setDateFrom(event.target.value);
-                }}
+                {...register("dateFrom")}
                 size="small"
                 slotProps={{ inputLabel: { shrink: true } }}
                 sx={{ minWidth: { xs: "100%", md: 155 } }}
@@ -332,10 +348,7 @@ function RouteComponent() {
               <TextField
                 label="To"
                 type="date"
-                value={dateTo}
-                onChange={(event) => {
-                  setDateTo(event.target.value);
-                }}
+                {...register("dateTo")}
                 size="small"
                 slotProps={{ inputLabel: { shrink: true } }}
                 sx={{ minWidth: { xs: "100%", md: 155 } }}
