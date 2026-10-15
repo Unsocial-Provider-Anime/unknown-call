@@ -1,0 +1,18 @@
+{
+  "chat.mcp.access": "all",
+  "chat.mcp.discovery.enabled": {
+    "copilot": true
+  },
+  "files.watcherExclude": {
+    "**/routeTree.gen.ts": true
+  },
+  "search.exclude": {
+    "**/routeTree.gen.ts": true
+  },
+  "files.readonlyInclude": {
+    "**/routeTree.gen.ts": true
+  },
+  "js/ts.preferences.autoImportSpecifierExcludeRegexes": [
+    "^@mui/[^/]+/.+"
+  ]
+}
