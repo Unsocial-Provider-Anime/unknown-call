@@ -1,20 +1,25 @@
-from sqlalchemy import BigInteger, Column, Date, DateTime, Identity, MetaData, Table, Text, Time, text
+from datetime import date, datetime, time
+
+from sqlalchemy import BigInteger, Date, DateTime, Identity, Text, Time, text
+from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
 
-metadata = MetaData()
+class Base(DeclarativeBase):
+    pass
 
-call_records = Table(
-    "call_records",
-    metadata,
-    Column("id", BigInteger, Identity(always=True), primary_key=True, nullable=False),
-    Column("date", Date, nullable=False),
-    Column("time", Time(timezone=False), nullable=False),
-    Column("country_code", Text, nullable=False),
-    Column("caller_number", Text, nullable=False),
-    Column(
-        "created_at",
+
+class CallRecord(Base):
+    __tablename__ = "call_records"
+
+    id: Mapped[int] = mapped_column(
+        BigInteger, Identity(always=True), primary_key=True, nullable=False
+    )
+    date: Mapped[date] = mapped_column(Date, nullable=False)
+    time: Mapped[time] = mapped_column(Time(timezone=False), nullable=False)
+    country_code: Mapped[str] = mapped_column(Text, nullable=False)
+    caller_number: Mapped[str] = mapped_column(Text, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         nullable=False,
         server_default=text("CURRENT_TIMESTAMP"),
-    ),
-)
+    )
