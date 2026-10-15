@@ -10,7 +10,7 @@ import Select from "@mui/material/Select";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
 import Alert from "@mui/material/Alert";
-import useMediaQuery from '@mui/material/useMediaQuery';
+import useMediaQuery from "@mui/material/useMediaQuery";
 import { useTheme } from "@mui/material/styles";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { DataGrid, type GridColDef } from "@mui/x-data-grid";
@@ -104,13 +104,10 @@ function RouteComponent() {
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
 
-  const {
-    data,
-    isLoading,
-    isError,
-    error,
-    refetch,
-  } = useQuery<CallLogsResponse, Error>({
+  const { data, isLoading, isError, error, refetch } = useQuery<
+    CallLogsResponse,
+    Error
+  >({
     queryKey: ["call_logs"] as const,
     queryFn: async ({ signal }) => {
       const response = await fetch(`${API_BASE_URL}/api/calls/list`, {
@@ -142,7 +139,9 @@ function RouteComponent() {
   });
 
   const callLogs = data?.call_logs ?? [];
-  const countryCodes = [...new Set(callLogs.map((log) => log.country_code))].sort();
+  const countryCodes = [
+    ...new Set(callLogs.map((log) => log.country_code)),
+  ].sort();
   const normalizedSearch = search.trim().toLowerCase();
   const filteredLogs = callLogs.filter((log) => {
     const searchableText =
@@ -154,7 +153,9 @@ function RouteComponent() {
       (!dateTo || log.date <= dateTo)
     );
   });
-  const hasFilters = Boolean(normalizedSearch || countryCode !== "all" || dateFrom || dateTo);
+  const hasFilters = Boolean(
+    normalizedSearch || countryCode !== "all" || dateFrom || dateTo,
+  );
 
   function clearFilters() {
     setSearch("");
@@ -164,9 +165,18 @@ function RouteComponent() {
   }
 
   return (
-    <Box component="main" sx={{ minHeight: "100vh", bgcolor: "background.default" }}>
+    <Box
+      component="main"
+      sx={{ minHeight: "100vh", bgcolor: "background.default" }}
+    >
       <Container maxWidth="xl" sx={{ py: { xs: 3, md: 5 } }}>
-        <Box sx={{ display: "flex", flexDirection: "column", gap: { xs: 3, md: 4 } }}>
+        <Box
+          sx={{
+            display: "flex",
+            flexDirection: "column",
+            gap: { xs: 3, md: 4 },
+          }}
+        >
           <Box
             component="header"
             sx={{
@@ -225,7 +235,9 @@ function RouteComponent() {
           </Box>
 
           {uploadMutation.isPending && (
-            <Alert severity="info">Uploading and validating your CSV file...</Alert>
+            <Alert severity="info">
+              Uploading and validating your CSV file...
+            </Alert>
           )}
           {uploadMutation.isSuccess && (
             <Alert
@@ -235,7 +247,8 @@ function RouteComponent() {
               }}
             >
               Imported {uploadMutation.data.count} call
-              {uploadMutation.data.count === 1 ? "" : "s"} from {uploadMutation.data.filename}.
+              {uploadMutation.data.count === 1 ? "" : "s"} from{" "}
+              {uploadMutation.data.filename}.
             </Alert>
           )}
           {uploadMutation.isError && (
@@ -277,7 +290,10 @@ function RouteComponent() {
                 size="small"
                 sx={{ flex: 1, minWidth: { md: 220 } }}
               />
-              <FormControl size="small" sx={{ minWidth: { xs: "100%", md: 165 } }}>
+              <FormControl
+                size="small"
+                sx={{ minWidth: { xs: "100%", md: 165 } }}
+              >
                 <InputLabel id="country-filter-label">Country code</InputLabel>
                 <Select
                   labelId="country-filter-label"
@@ -322,14 +338,23 @@ function RouteComponent() {
                 color="inherit"
                 disabled={!hasFilters}
                 onClick={clearFilters}
-                sx={{ alignSelf: { xs: "flex-start", md: "center" }, whiteSpace: "nowrap" }}
+                sx={{
+                  alignSelf: { xs: "flex-start", md: "center" },
+                  whiteSpace: "nowrap",
+                }}
               >
                 Clear filters
               </Button>
             </Box>
           </Box>
 
-          <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+          <Box
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+            }}
+          >
             <Typography variant="body2" color="text.secondary">
               {isError
                 ? "Call records are unavailable"
@@ -384,7 +409,8 @@ function RouteComponent() {
                 No call records yet
               </Typography>
               <Typography color="text.secondary">
-                Import a CSV file to add call records. Use the template to check the required columns.
+                Import a CSV file to add call records. Use the template to check
+                the required columns.
               </Typography>
               <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1.25 }}>
                 <Button
@@ -408,7 +434,13 @@ function RouteComponent() {
             </Box>
           ) : filteredLogs.length === 0 ? (
             <Box
-              sx={{ display: "flex", flexDirection: "column", alignItems: "flex-start", gap: 1, py: 6 }}
+              sx={{
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "flex-start",
+                gap: 1,
+                py: 6,
+              }}
             >
               <Typography variant="h6" component="h2">
                 No matching calls
@@ -432,18 +464,6 @@ function RouteComponent() {
                 }}
                 sx={{
                   minHeight: 420,
-                  border: 0,
-                  bgcolor: "background.paper",
-                  "& .MuiDataGrid-columnHeaders": {
-                    bgcolor: "#edf3ef",
-                    color: "text.primary",
-                  },
-                  "& .MuiDataGrid-cell:focus, & .MuiDataGrid-cell:focus-within": {
-                    outline: "none",
-                  },
-                  "& .MuiDataGrid-footerContainer": {
-                    borderColor: "divider",
-                  },
                 }}
               />
             </Box>
