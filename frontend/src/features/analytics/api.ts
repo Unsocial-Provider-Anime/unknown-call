@@ -70,10 +70,39 @@ export type HourlyDistributionResponse = z.infer<
 >;
 export type DayOfWeekResponse = z.infer<typeof dayOfWeekResponseSchema>;
 
+export const callerFrequencyResponseSchema = z.object({
+  summary: z.object({
+    total_calls: z.number().int().nonnegative(),
+    distinct_callers: z.number().int().nonnegative(),
+    one_time_callers: z.number().int().nonnegative(),
+    repeat_callers: z.number().int().nonnegative(),
+  }),
+  distribution: z.array(
+    z.object({
+      calls_per_caller: z.number().int().positive(),
+      caller_count: z.number().int().positive(),
+    }),
+  ),
+  top_callers: z
+    .array(
+      z.object({
+        country_code: z.string(),
+        caller_number: z.string(),
+        call_count: z.number().int().positive(),
+      }),
+    )
+    .max(10),
+});
+
+export type CallerFrequencyResponse = z.infer<
+  typeof callerFrequencyResponseSchema
+>;
+
 export const analyticsKeys = {
   volume: (period: VolumePeriod) => ["call-volume", period] as const,
   hourly: () => ["hourly-call-distribution"] as const,
   dayOfWeek: () => ["call-day-of-week-analysis"] as const,
+  callerFrequency: () => ["caller-frequency-distribution"] as const,
 };
 
 export const analyticsQueries = {
@@ -91,12 +120,26 @@ export const analyticsQueries = {
     queryOptions({
       queryKey: analyticsKeys.hourly(),
       queryFn: ({ signal }) =>
-        fetchJson("/api/calls/hourly", hourlyDistributionResponseSchema, signal),
+        fetchJson(
+          "/api/calls/hourly",
+          hourlyDistributionResponseSchema,
+          signal,
+        ),
     }),
   dayOfWeek: () =>
     queryOptions({
       queryKey: analyticsKeys.dayOfWeek(),
       queryFn: ({ signal }) =>
         fetchJson("/api/calls/day-of-week", dayOfWeekResponseSchema, signal),
+    }),
+  callerFrequency: () =>
+    queryOptions({
+      queryKey: analyticsKeys.callerFrequency(),
+      queryFn: ({ signal }) =>
+        fetchJson(
+          "/api/calls/caller-frequency",
+          callerFrequencyResponseSchema,
+          signal,
+        ),
     }),
 };

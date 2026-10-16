@@ -6,6 +6,7 @@ import ListItem from "@mui/material/ListItem";
 import Typography from "@mui/material/Typography";
 import { analyticsQueries } from "../features/analytics/api";
 import { CallVolumeSection } from "../features/analytics/components/CallVolumeSection";
+import { CallerFrequencySection } from "../features/analytics/components/CallerFrequencySection";
 import { DayOfWeekSection } from "../features/analytics/components/DayOfWeekSection";
 import { HourlyDistributionSection } from "../features/analytics/components/HourlyDistributionSection";
 import { noop } from "@tanstack/react-query";
@@ -16,6 +17,7 @@ export const Route = createFileRoute("/analysis")({
       context.queryClient.query(analyticsQueries.volume("day")).catch(noop),
       context.queryClient.query(analyticsQueries.hourly()).catch(noop),
       context.queryClient.query(analyticsQueries.dayOfWeek()).catch(noop),
+      context.queryClient.query(analyticsQueries.callerFrequency()).catch(noop),
     ]);
   },
   component: RouteComponent,
@@ -64,8 +66,8 @@ function RouteComponent() {
               <Typography variant="body1">
                 Frequency and Categorical Analysis.
               </Typography>
+              <CallerFrequencySection />
               <List>
-                <ListItem>Caller Frequency Distribution</ListItem>
                 <ListItem>Country Code Segmentation</ListItem>
               </List>
             </Box>
