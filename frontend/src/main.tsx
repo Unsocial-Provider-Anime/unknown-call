@@ -25,6 +25,12 @@ const router = createRouter({
   scrollRestoration: true,
   defaultStructuralSharing: true,
   defaultPreloadStaleTime: 0,
+  defaultErrorComponent: ({ error }) => (
+    <div>
+      <h1>Error</h1>
+      <p>{error instanceof Error ? error.message : String(error)}</p>
+    </div>
+  )
 });
 
 const rootElement = document.getElementById("root");
