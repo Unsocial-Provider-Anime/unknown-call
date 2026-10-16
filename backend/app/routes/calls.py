@@ -144,3 +144,29 @@ def get_call_day_of_week_analysis(supabase: Client = Depends(get_supabase)):
         raise HTTPException(
             status_code=500, detail=f"Error fetching day-of-week analysis: {e}"
         )
+
+
+@router.get("/caller-frequency")
+def get_caller_frequency_distribution(supabase: Client = Depends(get_supabase)):
+    try:
+        response = supabase.rpc("get_caller_frequency_distribution").execute()
+        if response.data is None:
+            return {
+                "summary": {
+                    "total_calls": 0,
+                    "distinct_callers": 0,
+                    "one_time_callers": 0,
+                    "repeat_callers": 0,
+                },
+                "distribution": [],
+                "top_callers": [],
+            }
+        return {
+            "summary": response.data["summary"],
+            "distribution": response.data["distribution"],
+            "top_callers": response.data["top_callers"],
+        }
+    except Exception as e:
+        raise HTTPException(
+            status_code=500, detail=f"Error fetching caller frequency distribution: {e}"
+        )

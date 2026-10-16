@@ -162,3 +162,71 @@ def test_day_of_week_route_handles_no_records(supabase_client: MagicMock) -> Non
     assert len(body["days"]) == 7
     assert body["test_available"] is False
     assert body["p_value"] is None
+
+
+@pytest.mark.parametrize("empty", [False, True])
+def test_caller_frequency_returns_rpc_object(
+    supabase_client: MagicMock, empty: bool
+) -> None:
+    payload = {
+        "summary": {
+            "total_calls": 0 if empty else 9,
+            "distinct_callers": 0 if empty else 4,
+            "one_time_callers": 0 if empty else 2,
+            "repeat_callers": 0 if empty else 2,
+        },
+        "distribution": [] if empty else [
+            {"calls_per_caller": 1, "caller_count": 2},
+            {"calls_per_caller": 2, "caller_count": 1},
+            {"calls_per_caller": 5, "caller_count": 1},
+        ],
+        "top_callers": [] if empty else [
+            {"country_code": "852", "caller_number": "0012XXXX", "call_count": 5},
+            {"country_code": "852", "caller_number": "3456XXXX", "call_count": 2},
+            {"country_code": "44", "caller_number": "0012XXXX", "call_count": 1},
+            {"country_code": "852", "caller_number": "7890XXXX", "call_count": 1},
+        ],
+    }
+    supabase_client.rpc.return_value.execute.return_value.data = payload
+
+    with TestClient(app) as client:
+        response = client.get("/api/calls/caller-frequency")
+
+    assert response.status_code == 200
+    assert response.json() == payload
+    supabase_client.rpc.assert_called_once_with("get_caller_frequency_distribution")
+
+
+def test_caller_frequency_handles_no_data(supabase_client: MagicMock) -> None:
+    supabase_client.rpc.return_value.execute.return_value.data = None
+
+    with TestClient(app) as client:
+        response = client.get("/api/calls/caller-frequency")
+
+    assert response.status_code == 200
+    assert response.json() == {
+        "summary": {
+            "total_calls": 0, "distinct_callers": 0,
+            "one_time_callers": 0, "repeat_callers": 0,
+        },
+        "distribution": [],
+        "top_callers": [],
+    }
+
+
+@pytest.mark.parametrize("malformed", [False, True])
+def test_caller_frequency_reports_rpc_errors(
+    supabase_client: MagicMock, malformed: bool
+) -> None:
+    if malformed:
+        supabase_client.rpc.return_value.execute.return_value.data = {}
+    else:
+        supabase_client.rpc.return_value.execute.side_effect = RuntimeError("boom")
+
+    with TestClient(app) as client:
+        response = client.get("/api/calls/caller-frequency")
+
+    assert response.status_code == 500
+    assert response.json()["detail"].startswith(
+        "Error fetching caller frequency distribution:"
+    )
