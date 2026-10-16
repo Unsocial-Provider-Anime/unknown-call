@@ -1,10 +1,12 @@
-from fastapi import APIRouter, Depends
+from typing import Literal
+
+from fastapi import APIRouter, Depends, HTTPException, Query
 from supabase import Client
-from fastapi import Depends, HTTPException
 
 from database.supabase_client import get_supabase
 
 router = APIRouter(prefix="/api/calls", tags=["calls"])
+
 
 @router.get("/list")
 def list_call_logs(supabase: Client = Depends(get_supabase)):
@@ -13,3 +15,19 @@ def list_call_logs(supabase: Client = Depends(get_supabase)):
         return {"call_logs": response.data}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error fetching call logs: {e}")
+
+
+@router.get("/volume")
+def get_call_volume(
+    period: Literal["day", "week", "month", "year"] = Query(default="day"),
+    supabase: Client = Depends(get_supabase),
+):
+    try:
+        response = supabase.rpc("get_call_volume", {"p_period": period}).execute()
+        points = [
+            {"date": point["bucket_start"], "count": point["call_count"]}
+            for point in (response.data or [])
+        ]
+        return {"period": period, "points": points}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error fetching call volume: {e}")
