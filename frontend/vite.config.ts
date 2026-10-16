@@ -50,6 +50,11 @@ export default defineConfig({
               test: /[\\/]node_modules[\\/]@mui[\\/]x-date-pickers[\\/]/,
               priority: 25,
             },
+            {
+              name: "vendor-mui-charts",
+              test: /[\\/]node_modules[\\/]@mui[\\/]x-charts[\\/]/,
+              priority: 20,
+            },
           ],
         },
       },
