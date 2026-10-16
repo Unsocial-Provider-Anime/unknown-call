@@ -58,9 +58,6 @@ function RouteComponent() {
               <CallVolumeSection />
               <HourlyDistributionSection />
               <DayOfWeekSection />
-              <List>
-                <ListItem>Inter-arrival Time Analysis</ListItem>
-              </List>
             </Box>
             <Box component="section" id="Frequency and Categorical Analysis">
               <Typography variant="body1">
@@ -69,7 +66,6 @@ function RouteComponent() {
               <List>
                 <ListItem>Caller Frequency Distribution</ListItem>
                 <ListItem>Country Code Segmentation</ListItem>
-                <ListItem>Call Burst &amp; Clustering Analysis</ListItem>
               </List>
             </Box>
             <Box component="section" id="Anomaly and Outlier Detection">
