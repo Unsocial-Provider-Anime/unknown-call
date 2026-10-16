@@ -32,7 +32,7 @@ export default defineConfig({
           groups: [
             {
               name: "vendor-react",
-              test: /[\\/]node_modules[\\/](react|react-dom|react-router-dom|scheduler)[\\/]/,
+              test: /[\\/]node_modules[\\/](react|react-dom|scheduler)[\\/]/,
               priority: 50,
             },
             {
