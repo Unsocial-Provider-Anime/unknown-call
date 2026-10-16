@@ -37,6 +37,42 @@ const hourlyDistributionResponseSchema = z.object({
     }),
   ),
 });
+const dayNames = [
+  "Monday",
+  "Tuesday",
+  "Wednesday",
+  "Thursday",
+  "Friday",
+  "Saturday",
+  "Sunday",
+] as const;
+const dayGroupSchema = z.object({
+  call_count: z.number().int().nonnegative(),
+  observed_days: z.number().int().nonnegative(),
+  calls_per_day: z.number().nonnegative(),
+});
+const dayOfWeekResponseSchema = z.object({
+  days: z.array(
+    z.object({
+      day: z.enum(dayNames),
+      call_count: z.number().int().nonnegative(),
+      observed_days: z.number().int().nonnegative(),
+      calls_per_day: z.number().nonnegative(),
+    }),
+  ),
+  weekday: dayGroupSchema,
+  weekend: dayGroupSchema,
+  rate_ratio: z.number().nonnegative().nullable(),
+  confidence_interval_95: z
+    .object({
+      lower: z.number().nonnegative(),
+      upper: z.number().nonnegative().nullable(),
+    })
+    .nullable(),
+  p_value: z.number().min(0).max(1).nullable(),
+  test_available: z.boolean(),
+  test_unavailable_reason: z.string().nullable(),
+});
 
 type VolumePeriod = z.infer<typeof volumePeriodSchema>;
 
@@ -75,6 +111,14 @@ function formatHour(hour: number): string {
   return `${hour.toString().padStart(2, "0")}:00`;
 }
 
+function formatRate(value: number): string {
+  return value.toLocaleString("en-US", { maximumFractionDigits: 2 });
+}
+
+function formatPValue(value: number): string {
+  return value < 0.001 ? "< 0.001" : value.toFixed(3);
+}
+
 export const Route = createFileRoute("/analysis")({
   component: RouteComponent,
 });
@@ -111,10 +155,30 @@ function RouteComponent() {
     },
   });
   const hourlyPoints = hourlyData?.points ?? [];
+  const {
+    data: dayOfWeekData,
+    isPending: isDayOfWeekPending,
+    isError: isDayOfWeekError,
+    error: dayOfWeekError,
+    refetch: refetchDayOfWeek,
+  } = useQuery({
+    queryKey: ["call-day-of-week-analysis"],
+    queryFn: async ({ signal }) => {
+      const response = await fetch("/api/calls/day-of-week", { signal });
+      if (!response.ok) {
+        throw new Error(await responseError(response));
+      }
+      return dayOfWeekResponseSchema.parse(await response.json());
+    },
+  });
   const peakCount = Math.max(0, ...hourlyPoints.map((point) => point.count));
   const peakHours = hourlyPoints
     .filter((point) => peakCount > 0 && point.count === peakCount)
     .map((point) => point.hour);
+  const hasObservedDayOfWeekData =
+    (dayOfWeekData?.weekday.observed_days ?? 0) +
+      (dayOfWeekData?.weekend.observed_days ?? 0) >
+    0;
 
   return (
     <Box
@@ -400,8 +464,168 @@ function RouteComponent() {
                     )}
                 </Box>
               </Box>
+              <Box
+                component="section"
+                aria-labelledby="day-of-week-heading"
+                sx={{ display: "flex", flexDirection: "column", gap: 2, mt: 4 }}
+              >
+                <Typography
+                  variant="h5"
+                  component="h2"
+                  id="day-of-week-heading"
+                >
+                  Day-of-the-Week Analysis
+                </Typography>
+                <Box sx={{ minHeight: 320 }} aria-live="polite">
+                  {isDayOfWeekPending && (
+                    <Box
+                      sx={{
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        gap: 1.5,
+                        minHeight: 320,
+                      }}
+                    >
+                      <CircularProgress
+                        size={24}
+                        aria-label="Loading day-of-week analysis"
+                      />
+                      <Typography color="text.secondary">
+                        Loading day-of-week analysis...
+                      </Typography>
+                    </Box>
+                  )}
+                  {isDayOfWeekError && (
+                    <Alert
+                      severity="error"
+                      action={
+                        <Button
+                          color="inherit"
+                          size="small"
+                          onClick={() => {
+                            void refetchDayOfWeek();
+                          }}
+                        >
+                          Retry
+                        </Button>
+                      }
+                    >
+                      Could not load day-of-week analysis: {dayOfWeekError.message}
+                    </Alert>
+                  )}
+                  {!isDayOfWeekPending &&
+                    !isDayOfWeekError &&
+                    !hasObservedDayOfWeekData && (
+                      <Box sx={{ py: 5 }}>
+                        <Typography variant="h6" component="h3">
+                          No call records yet
+                        </Typography>
+                        <Typography color="text.secondary">
+                          There are no observed dates to compare.
+                        </Typography>
+                      </Box>
+                    )}
+                  {!isDayOfWeekPending &&
+                    !isDayOfWeekError &&
+                    hasObservedDayOfWeekData &&
+                    dayOfWeekData && (
+                      <>
+                        <Box
+                          sx={{
+                            display: "grid",
+                            gridTemplateColumns: {
+                              xs: "1fr",
+                              sm: "repeat(2, minmax(0, 1fr))",
+                            },
+                            gap: 2,
+                            maxWidth: 720,
+                          }}
+                        >
+                          {([
+                            ["Weekdays (Mon-Fri)", dayOfWeekData.weekday],
+                            ["Weekend (Sat-Sun)", dayOfWeekData.weekend],
+                          ] as const).map(([label, group]) => (
+                            <Box
+                              key={label}
+                              sx={{
+                                py: 1.5,
+                                borderBottom: 1,
+                                borderColor: "divider",
+                              }}
+                            >
+                              <Typography variant="subtitle2" color="text.secondary">
+                                {label}
+                              </Typography>
+                              <Typography variant="h6" component="p">
+                                {formatRate(group.calls_per_day)} calls per day
+                              </Typography>
+                              <Typography variant="body2" color="text.secondary">
+                                {group.call_count.toLocaleString()} calls across {group.observed_days.toLocaleString()} observed days
+                              </Typography>
+                            </Box>
+                          ))}
+                        </Box>
+                        <Box
+                          tabIndex={0}
+                          role="region"
+                          aria-label="Scrollable average call rates by day of week"
+                          sx={{ width: "100%", minWidth: 0, overflowX: "auto", mt: 2 }}
+                        >
+                          <Box
+                            role="img"
+                            aria-label="Average calls per observed date for each day of the week"
+                            sx={{ minWidth: 560 }}
+                          >
+                            <BarChart
+                              xAxis={[
+                                {
+                                  scaleType: "band",
+                                  data: dayOfWeekData.days.map((day) => day.day),
+                                },
+                              ]}
+                              yAxis={[{ min: 0, label: "Calls per day" }]}
+                              series={[
+                                {
+                                  data: dayOfWeekData.days.map(
+                                    (day) => day.calls_per_day,
+                                  ),
+                                  label: "Average calls per day",
+                                },
+                              ]}
+                              height={320}
+                              grid={{ horizontal: true }}
+                              margin={{ left: 72, right: 24, top: 24, bottom: 48 }}
+                            />
+                          </Box>
+                        </Box>
+                        {dayOfWeekData.test_available ? (
+                          <Typography color="text.secondary" role="status">
+                            Weekday/weekend rate ratio: {dayOfWeekData.rate_ratio === null
+                              ? "∞"
+                              : `${formatRate(dayOfWeekData.rate_ratio)}×`}
+                            {dayOfWeekData.confidence_interval_95 && (
+                              <> (95% CI {formatRate(dayOfWeekData.confidence_interval_95.lower)} to {dayOfWeekData.confidence_interval_95.upper === null
+                                ? "∞"
+                                : formatRate(dayOfWeekData.confidence_interval_95.upper)})</>
+                            )}
+                            {dayOfWeekData.p_value !== null &&
+                              `; exact p-value ${formatPValue(dayOfWeekData.p_value)}`}
+                          </Typography>
+                        ) : (
+                          <Alert severity="info">
+                            {dayOfWeekData.test_unavailable_reason ??
+                              "A weekday/weekend comparison is not available."}
+                          </Alert>
+                        )}
+                        <Typography variant="caption" color="text.secondary">
+                          Exact Poisson rate comparison; assumes independent calls at a stable rate over the observed date range.
+                        </Typography>
+                      </>
+                    )}
+                </Box>
+              </Box>
               <List>
-                <ListItem>Day-of-the-Week Analysis</ListItem>
                 <ListItem>Inter-arrival Time Analysis</ListItem>
               </List>
             </Box>
