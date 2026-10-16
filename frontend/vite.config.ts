@@ -17,12 +17,42 @@ export default defineConfig({
     },
   },
   server: {
-    proxy:{
+    proxy: {
       "/api": {
         target: "http://localhost:8000",
         changeOrigin: true,
         secure: false,
-      }
-    }
-  }
+      },
+    },
+  },
+  build: {
+    rolldownOptions: {
+      output: {
+        codeSplitting: {
+          groups: [
+            {
+              name: "vendor-react",
+              test: /[\\/]node_modules[\\/](react|react-dom|react-router-dom|scheduler)[\\/]/,
+              priority: 50,
+            },
+            {
+              name: "vendor-mui-material",
+              test: /[\\/]node_modules[\\/]@mui[\\/]material[\\/]/,
+              priority: 40,
+            },
+            {
+              name: "vendor-mui-data-grid",
+              test: /[\\/]node_modules[\\/]@mui[\\/]x-data-grid[\\/]/,
+              priority: 30,
+            },
+            {
+              name: "vendor-mui-date-pickers",
+              test: /[\\/]node_modules[\\/]@mui[\\/]x-date-pickers[\\/]/,
+              priority: 25,
+            },
+          ],
+        },
+      },
+    },
+  },
 });

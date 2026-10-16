@@ -136,7 +136,7 @@ def local_list_call_logs(
     return {"call_logs": call_logs}
 
 
-@app.get("/health")
+@app.get("/api/health")
 def health_check(
     db: Annotated[Session, Depends(get_local_db_session, scope="function")],
 ):
