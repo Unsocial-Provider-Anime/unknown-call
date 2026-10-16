@@ -12,6 +12,7 @@ import MenuItem from "@mui/material/MenuItem";
 import Select from "@mui/material/Select";
 import Typography from "@mui/material/Typography";
 import { useQuery } from "@tanstack/react-query";
+import { BarChart } from "@mui/x-charts/BarChart";
 import { LineChart } from "@mui/x-charts/LineChart";
 import dayjs from "dayjs";
 import { useState } from "react";
@@ -24,6 +25,14 @@ const volumeResponseSchema = z.object({
   points: z.array(
     z.object({
       date: z.iso.date(),
+      count: z.number().int().nonnegative(),
+    }),
+  ),
+});
+const hourlyDistributionResponseSchema = z.object({
+  points: z.array(
+    z.object({
+      hour: z.number().int().min(0).max(23),
       count: z.number().int().nonnegative(),
     }),
   ),
@@ -62,6 +71,10 @@ function formatBucketDate(value: Date, period: VolumePeriod): string {
   return date.format("MMM D, YYYY");
 }
 
+function formatHour(hour: number): string {
+  return `${hour.toString().padStart(2, "0")}:00`;
+}
+
 export const Route = createFileRoute("/analysis")({
   component: RouteComponent,
 });
@@ -81,6 +94,27 @@ function RouteComponent() {
     },
   });
   const points = data?.points ?? [];
+  const {
+    data: hourlyData,
+    isPending: isHourlyPending,
+    isError: isHourlyError,
+    error: hourlyError,
+    refetch: refetchHourly,
+  } = useQuery({
+    queryKey: ["hourly-call-distribution"],
+    queryFn: async ({ signal }) => {
+      const response = await fetch("/api/calls/hourly", { signal });
+      if (!response.ok) {
+        throw new Error(await responseError(response));
+      }
+      return hourlyDistributionResponseSchema.parse(await response.json());
+    },
+  });
+  const hourlyPoints = hourlyData?.points ?? [];
+  const peakCount = Math.max(0, ...hourlyPoints.map((point) => point.count));
+  const peakHours = hourlyPoints
+    .filter((point) => peakCount > 0 && point.count === peakCount)
+    .map((point) => point.hour);
 
   return (
     <Box
@@ -260,8 +294,113 @@ function RouteComponent() {
                   )}
                 </Box>
               </Box>
+              <Box
+                component="section"
+                aria-labelledby="hourly-distribution-heading"
+                sx={{ display: "flex", flexDirection: "column", gap: 2, mt: 4 }}
+              >
+                <Typography
+                  variant="h5"
+                  component="h2"
+                  id="hourly-distribution-heading"
+                >
+                  Hourly Distribution (Peak Hours)
+                </Typography>
+                <Box sx={{ minHeight: 320 }} aria-live="polite">
+                  {isHourlyPending && (
+                    <Box
+                      sx={{
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        gap: 1.5,
+                        minHeight: 320,
+                      }}
+                    >
+                      <CircularProgress
+                        size={24}
+                        aria-label="Loading hourly distribution"
+                      />
+                      <Typography color="text.secondary">
+                        Loading hourly distribution...
+                      </Typography>
+                    </Box>
+                  )}
+                  {isHourlyError && (
+                    <Alert
+                      severity="error"
+                      action={
+                        <Button
+                          color="inherit"
+                          size="small"
+                          onClick={() => {
+                            void refetchHourly();
+                          }}
+                        >
+                          Retry
+                        </Button>
+                      }
+                    >
+                      Could not load hourly distribution: {hourlyError.message}
+                    </Alert>
+                  )}
+                  {!isHourlyPending && !isHourlyError &&
+                    hourlyPoints.length === 0 && (
+                      <Box sx={{ py: 5 }}>
+                        <Typography variant="h6" component="h3">
+                          No hourly data available
+                        </Typography>
+                        <Typography color="text.secondary">
+                          There are no hourly call counts to display.
+                        </Typography>
+                      </Box>
+                    )}
+                  {!isHourlyPending && !isHourlyError &&
+                    hourlyPoints.length > 0 && (
+                      <>
+                        <Typography color="text.secondary" role="status">
+                          {peakHours.length > 0
+                            ? `Peak: ${peakHours.map(formatHour).join(", ")} (${peakCount} ${peakCount === 1 ? "call" : "calls"})`
+                            : "No calls recorded."}
+                        </Typography>
+                        <Box
+                          tabIndex={0}
+                          role="region"
+                          aria-label="Scrollable hourly call distribution chart"
+                          sx={{ width: "100%", minWidth: 0, overflowX: "auto" }}
+                        >
+                          <Box
+                            role="img"
+                            aria-label={`Hourly call counts across ${hourlyPoints.length} hours`}
+                            sx={{ minWidth: 720 }}
+                          >
+                            <BarChart
+                              xAxis={[
+                                {
+                                  scaleType: "band",
+                                  data: hourlyPoints.map((point) =>
+                                    formatHour(point.hour),
+                                  ),
+                                },
+                              ]}
+                              yAxis={[{ min: 0, label: "Calls" }]}
+                              series={[
+                                {
+                                  data: hourlyPoints.map((point) => point.count),
+                                  label: "Calls",
+                                },
+                              ]}
+                              height={320}
+                              grid={{ horizontal: true }}
+                              margin={{ left: 56, right: 24, top: 24, bottom: 48 }}
+                            />
+                          </Box>
+                        </Box>
+                      </>
+                    )}
+                </Box>
+              </Box>
               <List>
-                <ListItem>Hourly Distribution (Peak Hours)</ListItem>
                 <ListItem>Day-of-the-Week Analysis</ListItem>
                 <ListItem>Inter-arrival Time Analysis</ListItem>
               </List>
