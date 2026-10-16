@@ -111,6 +111,7 @@ async function mockApi(page: Page) {
 test('filters call records and clears the search', async ({ page }) => {
   await mockApi(page);
   await page.goto('/');
+  expect(new URL(page.url()).search).toBe('');
 
   await expect(
     page.getByRole('heading', { name: 'Unknown Call' }),
@@ -123,6 +124,7 @@ test('filters call records and clears the search', async ({ page }) => {
 
   await page.getByRole('button', { name: 'Clear filters' }).click();
   await expect(page.getByText('Showing 2 of 2 calls')).toBeVisible();
+  expect(new URL(page.url()).search).toBe('');
 });
 
 test('hydrates filters from a shareable URL and clears them back to defaults', async ({
@@ -141,10 +143,7 @@ test('hydrates filters from a shareable URL and clears them back to defaults', a
   await page.getByRole('button', { name: 'Clear filters' }).click();
   await expect(page.getByText('Showing 2 of 2 calls')).toBeVisible();
   const clearedUrl = new URL(page.url());
-  expect(clearedUrl.searchParams.get('search')).toBe('');
-  expect(clearedUrl.searchParams.get('countryCode')).toBe('all');
-  expect(clearedUrl.searchParams.get('dateFrom')).toBe('');
-  expect(clearedUrl.searchParams.get('dateTo')).toBe('');
+  expect(clearedUrl.search).toBe('');
 });
 
 test('shows the empty call-log state', async ({ page }) => {

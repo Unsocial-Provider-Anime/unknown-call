@@ -1,4 +1,7 @@
-import { createFileRoute } from "@tanstack/react-router";
+import {
+  createFileRoute,
+  stripSearchParams,
+} from "@tanstack/react-router";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import CircularProgress from "@mui/material/CircularProgress";
@@ -19,6 +22,9 @@ import { filterCallLogs } from "../features/call-logs/model";
 
 export const Route = createFileRoute("/")({
   validateSearch: callLogSearchSchema,
+  search: {
+    middlewares: [stripSearchParams(defaultCallLogSearch)],
+  },
   loader: async ({ context }) => {
     await context.queryClient.query(callLogsQueryOptions());
   },
