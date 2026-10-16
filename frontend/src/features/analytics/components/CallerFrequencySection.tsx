@@ -101,10 +101,10 @@ export function CallerFrequencySection() {
             >
               {(
                 [
-                  ["Calls with identifiers", data.summary.total_calls],
-                  ["Distinct identifiers", data.summary.distinct_callers],
-                  ["One-time identifiers", data.summary.one_time_callers],
-                  ["Repeat identifiers", data.summary.repeat_callers],
+                  ["Total Calls", data.summary.total_calls],
+                  ["Distinct Callers", data.summary.distinct_callers],
+                  ["One-time Callers", data.summary.one_time_callers],
+                  ["Repeat Callers", data.summary.repeat_callers],
                 ] as const
               ).map(([label, count]) => (
                 <Box
@@ -124,7 +124,7 @@ export function CallerFrequencySection() {
             </Box>
             {data.summary.distinct_callers === 0 ? (
               <Typography variant="h6" component="h3" sx={{ py: 5 }}>
-                No caller identifiers recorded
+                No callers recorded
               </Typography>
             ) : (
               <>
@@ -136,7 +136,7 @@ export function CallerFrequencySection() {
                 >
                   <Box
                     role="img"
-                    aria-label={`Caller frequency distribution: ${data.distribution.map((point) => `${point.calls_per_caller} ${point.calls_per_caller === 1 ? "call" : "calls"}: ${point.caller_count} ${point.caller_count === 1 ? "identifier" : "identifiers"}`).join("; ")}`}
+                    aria-label={`Caller frequency distribution: ${data.distribution.map((point) => `${point.calls_per_caller} ${point.calls_per_caller === 1 ? "call" : "calls"}: ${point.caller_count} ${point.caller_count === 1 ? "caller" : "callers"}`).join("; ")}`}
                     sx={{ minWidth: 560 }}
                   >
                     <BarChart
@@ -146,16 +146,16 @@ export function CallerFrequencySection() {
                           data: data.distribution.map(
                             (point) => point.calls_per_caller,
                           ),
-                          label: "Calls per identifier",
+                          label: "Calls per caller",
                         },
                       ]}
-                      yAxis={[{ min: 0, tickMinStep: 1, label: "Identifiers" }]}
+                      yAxis={[{ min: 0, tickMinStep: 1, label: "Callers" }]}
                       series={[
                         {
                           data: data.distribution.map(
                             (point) => point.caller_count,
                           ),
-                          label: "Identifiers",
+                          label: "Callers",
                         },
                       ]}
                       height={320}
@@ -175,11 +175,11 @@ export function CallerFrequencySection() {
                     id="top-callers-heading"
                     sx={{ mb: 2 }}
                   >
-                    Top 10 Recorded Callers
+                    Top 10 Repeat Callers
                   </Typography>
                   <Box sx={{ width: "100%", minWidth: 0, height: 420 }}>
                     <DataGrid
-                      aria-label="Top recorded callers"
+                      aria-label="Top repeat callers"
                       rows={data.top_callers}
                       columns={columns}
                       getRowId={getCallerId}
