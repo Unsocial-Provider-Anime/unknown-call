@@ -31,3 +31,18 @@ def get_call_volume(
         return {"period": period, "points": points}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error fetching call volume: {e}")
+
+
+@router.get("/hourly")
+def get_hourly_call_distribution(supabase: Client = Depends(get_supabase)):
+    try:
+        response = supabase.rpc("get_call_hourly_distribution").execute()
+        points = [
+            {"hour": point["hour"], "count": point["call_count"]}
+            for point in (response.data or [])
+        ]
+        return {"points": points}
+    except Exception as e:
+        raise HTTPException(
+            status_code=500, detail=f"Error fetching hourly call distribution: {e}"
+        )

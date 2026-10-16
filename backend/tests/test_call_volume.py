@@ -57,3 +57,34 @@ def test_call_volume_rejects_unsupported_period(
 
     assert response.status_code == 422
     supabase_client.rpc.assert_not_called()
+
+
+def test_hourly_call_distribution_maps_hour_counts(
+    supabase_client: MagicMock,
+) -> None:
+    supabase_client.rpc.return_value.execute.return_value.data = [
+        {"hour": 0, "call_count": 2},
+        {"hour": 23, "call_count": 5},
+    ]
+
+    with TestClient(app) as client:
+        response = client.get("/api/calls/hourly")
+
+    assert response.status_code == 200
+    assert response.json() == {
+        "points": [{"hour": 0, "count": 2}, {"hour": 23, "count": 5}]
+    }
+    supabase_client.rpc.assert_called_once_with("get_call_hourly_distribution")
+
+
+def test_hourly_call_distribution_handles_no_records(
+    supabase_client: MagicMock,
+) -> None:
+    supabase_client.rpc.return_value.execute.return_value.data = None
+
+    with TestClient(app) as client:
+        response = client.get("/api/calls/hourly")
+
+    assert response.status_code == 200
+    assert response.json() == {"points": []}
+    supabase_client.rpc.assert_called_once_with("get_call_hourly_distribution")
