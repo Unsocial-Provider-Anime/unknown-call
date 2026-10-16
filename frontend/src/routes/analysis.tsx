@@ -264,7 +264,7 @@ function RouteComponent() {
             </Box>
             <Box component="section" id="Frequency and Categorical Analysis">
               <Typography variant="body1">
-                This is the analysis for Frequency and Categorical data.
+                Frequency and Categorical Analysis.
               </Typography>
               <List>
                 <ListItem>Caller Frequency Distribution</ListItem>
@@ -274,7 +274,7 @@ function RouteComponent() {
             </Box>
             <Box component="section" id="Anomaly and Outlier Detection">
               <Typography variant="body1">
-                This is the analysis for Anomaly and Outlier Detection data.
+                Anomaly and Outlier Analysis.
               </Typography>
               <List>
                 <ListItem>Volume Outliers</ListItem>
