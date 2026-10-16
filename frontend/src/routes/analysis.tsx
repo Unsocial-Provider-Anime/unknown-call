@@ -71,10 +71,9 @@ function RouteComponent() {
   const { data, isPending, isError, error, refetch } = useQuery({
     queryKey: ["call-volume", period],
     queryFn: async ({ signal }) => {
-      const response = await fetch(
-        `/api/calls/volume?period=${period}`,
-        { signal },
-      );
+      const response = await fetch(`/api/calls/volume?period=${period}`, {
+        signal,
+      });
       if (!response.ok) {
         throw new Error(await responseError(response));
       }
@@ -124,9 +123,7 @@ function RouteComponent() {
             }}
           >
             <Box component="section" id="Temporal and Time Series Analysis">
-              <Typography variant="body1">
-                Temporal and Time Series
-              </Typography>
+              <Typography variant="body1">Temporal and Time Series</Typography>
               <Box
                 component="section"
                 aria-labelledby="call-volume-heading"
@@ -224,34 +221,41 @@ function RouteComponent() {
                   )}
                   {!isPending && !isError && points.length > 0 && (
                     <Box
-                      role="img"
-                      aria-label={`Call volume by ${period}, ${points.length} time periods`}
-                      sx={{ width: "100%", minWidth: 0 }}
+                      tabIndex={0}
+                      role="region"
+                      aria-label="Scrollable call volume chart"
+                      sx={{ width: "100%", minWidth: 0, overflowX: "auto" }}
                     >
-                      <LineChart
-                        xAxis={[
-                          {
-                            data: points.map(
-                              (point) => new Date(`${point.date}T00:00:00`),
-                            ),
-                            scaleType: "time",
-                            valueFormatter: (value) =>
-                              formatBucketDate(value, period),
-                          },
-                        ]}
-                        yAxis={[{ min: 0, label: "Calls" }]}
-                        series={[
-                          {
-                            data: points.map((point) => point.count),
-                            label: "Calls",
-                            showMark: true,
-                            curve: "linear",
-                          },
-                        ]}
-                        height={360}
-                        grid={{ horizontal: true }}
-                        margin={{ left: 56, right: 24, top: 24, bottom: 48 }}
-                      />
+                      <Box
+                        role="img"
+                        aria-label={`Call volume by ${period}, ${points.length} time periods`}
+                        sx={{ minWidth: 720 }}
+                      >
+                        <LineChart
+                          xAxis={[
+                            {
+                              data: points.map(
+                                (point) => new Date(`${point.date}T00:00:00`),
+                              ),
+                              scaleType: "time",
+                              valueFormatter: (value) =>
+                                formatBucketDate(value, period),
+                            },
+                          ]}
+                          yAxis={[{ min: 0, label: "Calls" }]}
+                          series={[
+                            {
+                              data: points.map((point) => point.count),
+                              label: "Calls",
+                              showMark: true,
+                              curve: "linear",
+                            },
+                          ]}
+                          height={360}
+                          grid={{ horizontal: true }}
+                          margin={{ left: 56, right: 24, top: 24, bottom: 48 }}
+                        />
+                      </Box>
                     </Box>
                   )}
                 </Box>
