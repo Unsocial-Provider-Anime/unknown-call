@@ -125,7 +125,7 @@ function RouteComponent() {
           >
             <Box component="section" id="Temporal and Time Series Analysis">
               <Typography variant="body1">
-                This is the analysis for Temporal and Time Series data.
+                Temporal and Time Series
               </Typography>
               <Box
                 component="section"
