@@ -8,13 +8,14 @@ import { analyticsQueries } from "../features/analytics/api";
 import { CallVolumeSection } from "../features/analytics/components/CallVolumeSection";
 import { DayOfWeekSection } from "../features/analytics/components/DayOfWeekSection";
 import { HourlyDistributionSection } from "../features/analytics/components/HourlyDistributionSection";
+import { noop } from "@tanstack/react-query";
 
 export const Route = createFileRoute("/analysis")({
   loader: async ({ context }) => {
     await Promise.all([
-      context.queryClient.query(analyticsQueries.volume("day")),
-      context.queryClient.query(analyticsQueries.hourly()),
-      context.queryClient.query(analyticsQueries.dayOfWeek()),
+      context.queryClient.query(analyticsQueries.volume("day")).catch(noop),
+      context.queryClient.query(analyticsQueries.hourly()).catch(noop),
+      context.queryClient.query(analyticsQueries.dayOfWeek()).catch(noop),
     ]);
   },
   component: RouteComponent,
