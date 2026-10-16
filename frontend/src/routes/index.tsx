@@ -157,6 +157,108 @@ function RouteComponent() {
     reset(defaultFilters);
   }
 
+  function renderCallLogContent() {
+    if (isError) {
+      return (
+        <Alert
+          severity="error"
+          action={
+            <Button
+              color="inherit"
+              size="small"
+              onClick={() => {
+                refetch();
+              }}
+            >
+              Retry
+            </Button>
+          }
+        >
+          Could not load call records: {error.message}
+        </Alert>
+      );
+    }
+
+    if (isLoading) {
+      return (
+        <Box
+          sx={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: 1.5,
+            minHeight: 360,
+            color: "text.secondary",
+          }}
+        >
+          <CircularProgress size={28} aria-label="Loading call records" />
+          <Typography variant="body2">Loading call records...</Typography>
+        </Box>
+      );
+    }
+
+    if (callLogs.length === 0) {
+      return (
+        <Box
+          sx={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "flex-start",
+            gap: 1.5,
+            py: { xs: 5, md: 8 },
+            maxWidth: 520,
+          }}
+        >
+          <Typography variant="h6" component="h2">
+            No call records yet
+          </Typography>
+          <Typography color="text.secondary">
+            There are no call records to display.
+          </Typography>
+        </Box>
+      );
+    }
+
+    if (filteredLogs.length === 0) {
+      return (
+        <Box
+          sx={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "flex-start",
+            gap: 1,
+            py: 6,
+          }}
+        >
+          <Typography variant="h6" component="h2">
+            No matching calls
+          </Typography>
+          <Typography color="text.secondary">
+            Adjust the search or filters to see call records.
+          </Typography>
+          <Button onClick={clearFilters}>Clear filters</Button>
+        </Box>
+      );
+    }
+
+    return (
+      <Box sx={{ width: "100%", minWidth: 0 }}>
+        <DataGrid
+          rows={filteredLogs}
+          columns={columns}
+          columnVisibilityModel={isCompact ? { time: false } : undefined}
+          disableRowSelectionOnClick
+          pageSizeOptions={[10, 25, 50]}
+          initialState={{
+            pagination: { paginationModel: { page: 0, pageSize: 10 } },
+          }}
+          sx={{ minHeight: 420 }}
+        />
+      </Box>
+    );
+  }
+
   return (
     <Box
       component="main"
@@ -304,91 +406,7 @@ function RouteComponent() {
             </Typography>
           </Box>
           {/* Call log content section */}
-          {isError ? (
-            <Alert
-              severity="error"
-              action={
-                <Button
-                  color="inherit"
-                  size="small"
-                  onClick={() => {
-                    refetch();
-                  }}
-                >
-                  Retry
-                </Button>
-              }
-            >
-              Could not load call records: {error.message}
-            </Alert>
-          ) : isLoading ? (
-            <Box
-              sx={{
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
-                justifyContent: "center",
-                gap: 1.5,
-                minHeight: 360,
-                color: "text.secondary",
-              }}
-            >
-              <CircularProgress size={28} aria-label="Loading call records" />
-              <Typography variant="body2">Loading call records...</Typography>
-            </Box>
-          ) : callLogs.length === 0 ? (
-            <Box
-              sx={{
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "flex-start",
-                gap: 1.5,
-                py: { xs: 5, md: 8 },
-                maxWidth: 520,
-              }}
-            >
-              <Typography variant="h6" component="h2">
-                No call records yet
-              </Typography>
-              <Typography color="text.secondary">
-                There are no call records to display.
-              </Typography>
-            </Box>
-          ) : filteredLogs.length === 0 ? (
-            <Box
-              sx={{
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "flex-start",
-                gap: 1,
-                py: 6,
-              }}
-            >
-              <Typography variant="h6" component="h2">
-                No matching calls
-              </Typography>
-              <Typography color="text.secondary">
-                Adjust the search or filters to see call records.
-              </Typography>
-              <Button onClick={clearFilters}>Clear filters</Button>
-            </Box>
-          ) : (
-            <Box sx={{ width: "100%", minWidth: 0 }}>
-              <DataGrid
-                rows={filteredLogs}
-                columns={columns}
-                columnVisibilityModel={isCompact ? { time: false } : undefined}
-                disableRowSelectionOnClick
-                pageSizeOptions={[10, 25, 50]}
-                initialState={{
-                  pagination: { paginationModel: { page: 0, pageSize: 10 } },
-                }}
-                sx={{
-                  minHeight: 420,
-                }}
-              />
-            </Box>
-          )}
+          {renderCallLogContent()}
         </Box>
       </Container>
     </Box>
