@@ -163,6 +163,7 @@ function RouteComponent() {
       sx={{ minHeight: "100vh", bgcolor: "background.default" }}
     >
       <Container maxWidth="xl" sx={{ py: { xs: 3, md: 5 } }}>
+        {/* Page header section */}
         <Box
           sx={{
             display: "flex",
@@ -186,7 +187,7 @@ function RouteComponent() {
               </Typography>
             </Box>
           </Box>
-
+          {/* Call log filters section */}
           <Box
             component="form"
             aria-label="Call log filters"
@@ -288,6 +289,7 @@ function RouteComponent() {
             </Box>
           </Box>
 
+          {/* Call log summary section */}
           <Box
             sx={{
               display: "flex",
@@ -301,7 +303,7 @@ function RouteComponent() {
                 : `Showing ${filteredLogs.length} of ${callLogs.length} calls`}
             </Typography>
           </Box>
-
+          {/* Call log content section */}
           {isError ? (
             <Alert
               severity="error"
