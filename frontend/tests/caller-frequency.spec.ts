@@ -1,90 +1,12 @@
 import { expect, test } from "@playwright/test";
-import type { CallerFrequencyResponse } from "../src/features/analytics/api";
-
-const callerFrequency: CallerFrequencyResponse = {
-  summary: {
-    total_calls: 9,
-    distinct_callers: 4,
-    one_time_callers: 2,
-    repeat_callers: 2,
-  },
-  distribution: [
-    { calls_per_caller: 1, caller_count: 2 },
-    { calls_per_caller: 2, caller_count: 1 },
-    { calls_per_caller: 5, caller_count: 1 },
-  ],
-  top_callers: [
-    { country_code: "852", caller_number: "0012XXXX", call_count: 5 },
-    { country_code: "852", caller_number: "3456XXXX", call_count: 2 },
-    { country_code: "44", caller_number: "0012XXXX", call_count: 1 },
-    { country_code: "852", caller_number: "7890XXXX", call_count: 1 },
-  ],
-};
-
-const emptyCallerFrequency: CallerFrequencyResponse = {
-  summary: {
-    total_calls: 0,
-    distinct_callers: 0,
-    one_time_callers: 0,
-    repeat_callers: 0,
-  },
-  distribution: [],
-  top_callers: [],
-};
+import {
+  callerFrequency,
+  emptyCallerFrequency,
+  installApiMocks,
+} from "./fixtures/api-mocks";
 
 test.beforeEach(async ({ page }) => {
-  await page.route("**/api/calls/**", async (route) => {
-    const path = new URL(route.request().url()).pathname;
-    switch (path) {
-      case "/api/calls/list":
-        await route.fulfill({ json: { call_logs: [] } });
-        break;
-      case "/api/calls/volume":
-        await route.fulfill({ json: { period: "day", points: [] } });
-        break;
-      case "/api/calls/hourly":
-        await route.fulfill({ json: { points: [] } });
-        break;
-      case "/api/calls/day-of-week":
-        await route.fulfill({
-          json: {
-            days: [],
-            weekday: { call_count: 0, observed_days: 0, calls_per_day: 0 },
-            weekend: { call_count: 0, observed_days: 0, calls_per_day: 0 },
-            rate_ratio: null,
-            confidence_interval_95: null,
-            p_value: null,
-            test_available: false,
-            test_unavailable_reason: "No observed dates.",
-          },
-        });
-        break;
-      case "/api/calls/caller-frequency":
-        await route.fulfill({ json: callerFrequency });
-        break;
-      default:
-        await route.fulfill({
-          status: 404,
-          json: { detail: "Unexpected test endpoint" },
-        });
-    }
-  });
-});
-
-test("index page shows the Unknown Call title", async ({ page }) => {
-  await page.goto("/");
-
-  await expect(
-    page.getByRole("heading", { name: "Unknown Call" }),
-  ).toBeVisible();
-});
-
-test("analysis page shows the Analysis title", async ({ page }) => {
-  await page.goto("/analysis");
-
-  await expect(
-    page.getByRole("heading", { name: "Analysis", exact: true }),
-  ).toBeVisible();
+  await installApiMocks(page);
 });
 
 test.describe("caller frequency", () => {
@@ -97,10 +19,10 @@ test.describe("caller frequency", () => {
       exact: true,
     });
     for (const [label, count] of [
-      ["Calls with identifiers", "9"],
-      ["Distinct identifiers", "4"],
-      ["One-time identifiers", "2"],
-      ["Repeat identifiers", "2"],
+      ["Total Calls", "9"],
+      ["Distinct Callers", "4"],
+      ["One-time Callers", "2"],
+      ["Repeat Callers", "2"],
     ]) {
       await expect(
         section
@@ -110,11 +32,11 @@ test.describe("caller frequency", () => {
     }
     await expect(
       section.getByRole("img", {
-        name: "Caller frequency distribution: 1 call: 2 identifiers; 2 calls: 1 identifier; 5 calls: 1 identifier",
+        name: "Caller frequency distribution: 1 call: 2 callers; 2 calls: 1 caller; 5 calls: 1 caller",
       }),
     ).toBeVisible();
     const rows = section
-      .getByRole("grid", { name: "Top recorded callers" })
+      .getByRole("grid", { name: "Top repeat callers" })
       .getByRole("row");
     await expect(rows).toHaveCount(5);
     for (const [index, caller] of callerFrequency.top_callers.entries()) {
@@ -141,7 +63,7 @@ test.describe("caller frequency", () => {
       exact: true,
     });
     await expect(
-      section.getByRole("heading", { name: "No caller identifiers recorded" }),
+      section.getByRole("heading", { name: "No callers recorded" }),
     ).toBeVisible();
     await expect(
       section.getByRole("group").getByText("0", { exact: true }),
@@ -218,7 +140,7 @@ test.describe("caller frequency", () => {
       failing = false;
       await section.getByRole("button", { name: "Retry" }).click();
       await expect(
-        section.getByRole("grid", { name: "Top recorded callers" }),
+        section.getByRole("grid", { name: "Top repeat callers" }),
       ).toBeVisible();
       await expect(section.getByRole("alert")).toHaveCount(0);
     });
@@ -235,7 +157,7 @@ test.describe("caller frequency", () => {
         exact: true,
       });
       await expect(
-        section.getByRole("grid", { name: "Top recorded callers" }),
+        section.getByRole("grid", { name: "Top repeat callers" }),
       ).toBeVisible();
       const chart = section.getByRole("region", {
         name: "Scrollable caller frequency chart",
@@ -255,7 +177,7 @@ test.describe("caller frequency", () => {
         )
         .toBe(true);
       const metric = section.getByRole("group", {
-        name: "Distinct identifiers",
+        name: "Distinct Callers",
         exact: true,
       });
       await expect(metric).toBeVisible();
