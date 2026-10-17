@@ -230,3 +230,72 @@ def test_caller_frequency_reports_rpc_errors(
     assert response.json()["detail"].startswith(
         "Error fetching caller frequency distribution:"
     )
+
+
+def test_country_code_distribution_returns_rpc_object(
+    supabase_client: MagicMock,
+) -> None:
+    payload = {
+        "summary": {"total_calls": 12, "distinct_country_codes": 2},
+        "countries": [
+            {
+                "country_code": "852",
+                "call_count": 9,
+                "call_share": 0.75,
+                "distinct_callers": 3,
+                "one_time_callers": 1,
+                "repeat_callers": 2,
+                "calls_per_caller": 3,
+            },
+            {
+                "country_code": "44",
+                "call_count": 3,
+                "call_share": 0.25,
+                "distinct_callers": 3,
+                "one_time_callers": 3,
+                "repeat_callers": 0,
+                "calls_per_caller": 1,
+            },
+        ],
+    }
+    supabase_client.rpc.return_value.execute.return_value.data = payload
+
+    with TestClient(app) as client:
+        response = client.get("/api/calls/country-codes")
+
+    assert response.status_code == 200
+    assert response.json() == payload
+    supabase_client.rpc.assert_called_once_with("get_country_code_distribution")
+
+
+def test_country_code_distribution_handles_no_data(
+    supabase_client: MagicMock,
+) -> None:
+    supabase_client.rpc.return_value.execute.return_value.data = None
+
+    with TestClient(app) as client:
+        response = client.get("/api/calls/country-codes")
+
+    assert response.status_code == 200
+    assert response.json() == {
+        "summary": {"total_calls": 0, "distinct_country_codes": 0},
+        "countries": [],
+    }
+
+
+@pytest.mark.parametrize("malformed", [False, True])
+def test_country_code_distribution_reports_rpc_errors(
+    supabase_client: MagicMock, malformed: bool
+) -> None:
+    if malformed:
+        supabase_client.rpc.return_value.execute.return_value.data = {}
+    else:
+        supabase_client.rpc.return_value.execute.side_effect = RuntimeError("boom")
+
+    with TestClient(app) as client:
+        response = client.get("/api/calls/country-codes")
+
+    assert response.status_code == 500
+    assert response.json()["detail"].startswith(
+        "Error fetching country code distribution:"
+    )

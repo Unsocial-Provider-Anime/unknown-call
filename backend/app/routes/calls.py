@@ -170,3 +170,22 @@ def get_caller_frequency_distribution(supabase: Client = Depends(get_supabase)):
         raise HTTPException(
             status_code=500, detail=f"Error fetching caller frequency distribution: {e}"
         )
+
+
+@router.get("/country-codes")
+def get_country_code_distribution(supabase: Client = Depends(get_supabase)):
+    try:
+        response = supabase.rpc("get_country_code_distribution").execute()
+        if response.data is None:
+            return {
+                "summary": {"total_calls": 0, "distinct_country_codes": 0},
+                "countries": [],
+            }
+        return {
+            "summary": response.data["summary"],
+            "countries": response.data["countries"],
+        }
+    except Exception as e:
+        raise HTTPException(
+            status_code=500, detail=f"Error fetching country code distribution: {e}"
+        )
