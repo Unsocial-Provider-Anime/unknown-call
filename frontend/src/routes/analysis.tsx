@@ -1,8 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import Box from "@mui/material/Box";
 import Container from "@mui/material/Container";
-import List from "@mui/material/List";
-import ListItem from "@mui/material/ListItem";
 import Typography from "@mui/material/Typography";
 import { analyticsQueries } from "../features/analytics/api";
 import { CallVolumeSection } from "../features/analytics/components/CallVolumeSection";
