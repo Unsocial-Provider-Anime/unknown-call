@@ -7,6 +7,7 @@ import Typography from "@mui/material/Typography";
 import { analyticsQueries } from "../features/analytics/api";
 import { CallVolumeSection } from "../features/analytics/components/CallVolumeSection";
 import { CallerFrequencySection } from "../features/analytics/components/CallerFrequencySection";
+import { CountryCodeSection } from "../features/analytics/components/CountryCodeSection";
 import { DayOfWeekSection } from "../features/analytics/components/DayOfWeekSection";
 import { HourlyDistributionSection } from "../features/analytics/components/HourlyDistributionSection";
 import { noop } from "@tanstack/react-query";
@@ -18,6 +19,7 @@ export const Route = createFileRoute("/analysis")({
       context.queryClient.query(analyticsQueries.hourly()).catch(noop),
       context.queryClient.query(analyticsQueries.dayOfWeek()).catch(noop),
       context.queryClient.query(analyticsQueries.callerFrequency()).catch(noop),
+      context.queryClient.query(analyticsQueries.countryCodes()).catch(noop),
     ]);
   },
   component: RouteComponent,
@@ -67,9 +69,7 @@ function RouteComponent() {
                 Frequency and Categorical Analysis.
               </Typography>
               <CallerFrequencySection />
-              <List>
-                <ListItem>Country Code Segmentation</ListItem>
-              </List>
+              <CountryCodeSection />
             </Box>
             <Box component="section" id="Anomaly and Outlier Detection">
               <Typography variant="body1">
