@@ -98,11 +98,34 @@ export type CallerFrequencyResponse = z.infer<
   typeof callerFrequencyResponseSchema
 >;
 
+export const countryCodeDistributionResponseSchema = z.object({
+  summary: z.object({
+    total_calls: z.number().int().nonnegative(),
+    distinct_country_codes: z.number().int().nonnegative(),
+  }),
+  countries: z.array(
+    z.object({
+      country_code: z.string(),
+      call_count: z.number().int().nonnegative(),
+      call_share: z.number().min(0).max(1),
+      distinct_callers: z.number().int().nonnegative(),
+      one_time_callers: z.number().int().nonnegative(),
+      repeat_callers: z.number().int().nonnegative(),
+      calls_per_caller: z.number().nonnegative(),
+    }),
+  ),
+});
+
+export type CountryCodeDistributionResponse = z.infer<
+  typeof countryCodeDistributionResponseSchema
+>;
+
 export const analyticsKeys = {
   volume: (period: VolumePeriod) => ["call-volume", period] as const,
   hourly: () => ["hourly-call-distribution"] as const,
   dayOfWeek: () => ["call-day-of-week-analysis"] as const,
   callerFrequency: () => ["caller-frequency-distribution"] as const,
+  countryCodes: () => ["country-code-distribution"] as const,
 };
 
 export const analyticsQueries = {
@@ -139,6 +162,16 @@ export const analyticsQueries = {
         fetchJson(
           "/api/calls/caller-frequency",
           callerFrequencyResponseSchema,
+          signal,
+        ),
+    }),
+  countryCodes: () =>
+    queryOptions({
+      queryKey: analyticsKeys.countryCodes(),
+      queryFn: ({ signal }) =>
+        fetchJson(
+          "/api/calls/country-codes",
+          countryCodeDistributionResponseSchema,
           signal,
         ),
     }),
