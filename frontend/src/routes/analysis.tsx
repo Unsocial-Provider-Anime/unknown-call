@@ -71,14 +71,6 @@ function RouteComponent() {
               <CallerFrequencySection />
               <CountryCodeSection />
             </Box>
-            <Box component="section" id="Anomaly and Outlier Detection">
-              <Typography variant="body1">
-                Anomaly and Outlier Analysis.
-              </Typography>
-              <List>
-                <ListItem>Volume Outliers</ListItem>
-              </List>
-            </Box>
           </Box>
         </Box>
       </Container>
