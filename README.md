@@ -22,7 +22,7 @@ A call-log analysis application with a React frontend and a Python API for call 
 - **Configuration:** python-dotenv
 - **Testing:** pytest, pytest-timeout
 
-The backend includes migrations for the `call_records` table and PostgreSQL call-volume and call-distribution functions. See [backend/README.md](backend/README.md) for database configuration and lifecycle details.
+The backend includes migrations for the `call_records` table and PostgreSQL call-volume, call-distribution, and country-code segmentation functions. See [backend/README.md](backend/README.md) for database configuration and lifecycle details.
 
 ## Development
 
