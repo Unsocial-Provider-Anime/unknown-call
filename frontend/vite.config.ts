@@ -17,6 +17,9 @@ export default defineConfig({
     },
   },
   server: {
+    port: 5173,
+    strictPort: true,
+    host: "localhost",
     proxy: {
       "/api": {
         target: "http://localhost:8000",
@@ -32,7 +35,7 @@ export default defineConfig({
           groups: [
             {
               name: "vendor-react",
-              test: /[\\/]node_modules[\\/](react|react-dom|react-router-dom|scheduler)[\\/]/,
+              test: /[\\/]node_modules[\\/](react|react-dom|scheduler)[\\/]/,
               priority: 50,
             },
             {
@@ -49,6 +52,11 @@ export default defineConfig({
               name: "vendor-mui-date-pickers",
               test: /[\\/]node_modules[\\/]@mui[\\/]x-date-pickers[\\/]/,
               priority: 25,
+            },
+            {
+              name: "vendor-mui-charts",
+              test: /[\\/]node_modules[\\/]@mui[\\/]x-charts[\\/]/,
+              priority: 20,
             },
           ],
         },
