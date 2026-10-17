@@ -1,5 +1,8 @@
 import type { Page } from "@playwright/test";
-import type { CallerFrequencyResponse } from "../../src/features/analytics/api";
+import type {
+  CallerFrequencyResponse,
+  CountryCodeDistributionResponse,
+} from "../../src/features/analytics/api";
 
 export const callerFrequency: CallerFrequencyResponse = {
   summary: {
@@ -32,11 +35,45 @@ export const emptyCallerFrequency: CallerFrequencyResponse = {
   top_callers: [],
 };
 
+export const countryCodeDistribution: CountryCodeDistributionResponse = {
+  summary: { total_calls: 12, distinct_country_codes: 2 },
+  countries: [
+    {
+      country_code: "852",
+      call_count: 9,
+      call_share: 0.75,
+      distinct_callers: 3,
+      one_time_callers: 1,
+      repeat_callers: 2,
+      calls_per_caller: 3,
+    },
+    {
+      country_code: "44",
+      call_count: 3,
+      call_share: 0.25,
+      distinct_callers: 3,
+      one_time_callers: 3,
+      repeat_callers: 0,
+      calls_per_caller: 1,
+    },
+  ],
+};
+
+export const emptyCountryCodeDistribution: CountryCodeDistributionResponse = {
+  summary: { total_calls: 0, distinct_country_codes: 0 },
+  countries: [],
+};
+
 export async function installApiMocks(
   page: Page,
-  overrides: { callerFrequency?: CallerFrequencyResponse } = {},
+  overrides: {
+    callerFrequency?: CallerFrequencyResponse;
+    countryCodes?: CountryCodeDistributionResponse;
+  } = {},
 ) {
   const callerFrequencyResponse = overrides.callerFrequency ?? callerFrequency;
+  const countryCodesResponse =
+    overrides.countryCodes ?? countryCodeDistribution;
 
   await page.route("**/api/calls/**", async (route) => {
     const path = new URL(route.request().url()).pathname;
@@ -66,6 +103,9 @@ export async function installApiMocks(
         break;
       case "/api/calls/caller-frequency":
         await route.fulfill({ json: callerFrequencyResponse });
+        break;
+      case "/api/calls/country-codes":
+        await route.fulfill({ json: countryCodesResponse });
         break;
       default:
         await route.fulfill({
