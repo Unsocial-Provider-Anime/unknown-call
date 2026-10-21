@@ -20,6 +20,7 @@ export const Route = createFileRoute("/analysis")({
       context.queryClient.query(analyticsQueries.countryCodes()).catch(noop),
     ]);
   },
+  pendingComponent: () => <Typography>Loading...</Typography>,
   component: RouteComponent,
 });
 
@@ -54,7 +55,11 @@ function RouteComponent() {
           <Box
             component="section"
             id="analysis-content"
-            sx={{ display: "flex", flexDirection: "column", gap: { xs: 3, md: 4 } }}
+            sx={{
+              display: "flex",
+              flexDirection: "column",
+              gap: { xs: 3, md: 4 },
+            }}
           >
             <Box component="section" id="Temporal and Time Series Analysis">
               <Typography variant="body1">Temporal and Time Series</Typography>

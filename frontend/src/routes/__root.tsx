@@ -14,12 +14,14 @@ import { ThemeProvider } from "@mui/material/styles";
 import { theme } from "../lib/ui/muiTheme";
 import CssBaseline from "@mui/material/CssBaseline";
 import InitColorSchemeScript from "@mui/material/InitColorSchemeScript";
+import Typography from "@mui/material/Typography";
 
 interface MyRouterContext {
   queryClient: QueryClient;
 }
 
 export const Route = createRootRouteWithContext<MyRouterContext>()({
+  pendingComponent: () => <Typography>Loading...</Typography>,
   component: RootComponent,
 });
 
@@ -35,7 +37,11 @@ function RootComponent() {
       <Box
         component="nav"
         aria-label="Main navigation"
-        sx={{ borderBottom: 1, borderColor: "divider", bgcolor: "background.paper" }}
+        sx={{
+          borderBottom: 1,
+          borderColor: "divider",
+          bgcolor: "background.paper",
+        }}
       >
         <Container
           maxWidth="xl"

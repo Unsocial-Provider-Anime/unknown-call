@@ -1,7 +1,4 @@
-import {
-  createFileRoute,
-  stripSearchParams,
-} from "@tanstack/react-router";
+import { createFileRoute, stripSearchParams } from "@tanstack/react-router";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import CircularProgress from "@mui/material/CircularProgress";
@@ -28,6 +25,7 @@ export const Route = createFileRoute("/")({
   loader: async ({ context }) => {
     await context.queryClient.query(callLogsQueryOptions());
   },
+  pendingComponent: () => <Typography>Loading...</Typography>,
   component: RouteComponent,
 });
 
