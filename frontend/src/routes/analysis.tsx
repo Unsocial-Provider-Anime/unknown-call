@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import LinearProgress from "@mui/material/LinearProgress";
 import Box from "@mui/material/Box";
 import Container from "@mui/material/Container";
 import Typography from "@mui/material/Typography";
@@ -20,7 +21,7 @@ export const Route = createFileRoute("/analysis")({
       context.queryClient.query(analyticsQueries.countryCodes()).catch(noop),
     ]);
   },
-  pendingComponent: () => <Typography>Loading...</Typography>,
+  pendingComponent: () => <LinearProgress />,
   component: RouteComponent,
 });
 
