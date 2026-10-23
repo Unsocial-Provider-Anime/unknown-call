@@ -14,14 +14,14 @@ import { ThemeProvider } from "@mui/material/styles";
 import { theme } from "../lib/ui/muiTheme";
 import CssBaseline from "@mui/material/CssBaseline";
 import InitColorSchemeScript from "@mui/material/InitColorSchemeScript";
-import Typography from "@mui/material/Typography";
+import LinearProgress from "@mui/material/LinearProgress";
 
 interface MyRouterContext {
   queryClient: QueryClient;
 }
 
 export const Route = createRootRouteWithContext<MyRouterContext>()({
-  pendingComponent: () => <Typography>Loading...</Typography>,
+  pendingComponent: () => <LinearProgress />,
   component: RootComponent,
 });
 
