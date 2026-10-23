@@ -63,6 +63,14 @@ function RootComponent() {
           >
             Analysis
           </Button>
+          <Button
+            component={Link}
+            to="/about"
+            variant={pathname === "/about" ? "contained" : "text"}
+            aria-current={pathname === "/about" ? "page" : undefined}
+          >
+            About
+          </Button>
         </Container>
       </Box>
       <Outlet />
